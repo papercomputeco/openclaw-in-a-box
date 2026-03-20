@@ -17,7 +17,7 @@ pythonpath = ["scripts", "tests"]
 
 [tool.coverage.run]
 source = ["scripts"]
-omit = ["scripts/observe_cli.py"]
+omit = []
 
 [tool.coverage.report]
 show_missing = true

@@ -18,3 +18,4 @@ venv/
 # Data files users bring
 rom/
 data/
+.coverage
