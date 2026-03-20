@@ -1,0 +1,31 @@
+# jcard.toml — stereOS VM configuration for OpenClaw skill template
+
+mixtape = "opencode-mixtape:latest"
+
+name = "claw-stereo"
+
+[resources]
+cpus   = 2
+memory = "4GiB"
+disk   = "20GiB"
+
+[network]
+mode = "nat"
+
+# Uncomment for LLM-powered agent:
+# egress_allow = ["api.anthropic.com"]
+
+[[shared]]
+host = "./"
+guest = "/workspace"
+readonly = false
+
+[secrets]
+# Inject API keys from host environment:
+# ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
+
+[agent]
+harness = "claude-code"
+prompt = "cd /workspace && bash scripts/install.sh && export LD_LIBRARY_PATH=$HOME/.nix-profile/lib:$LD_LIBRARY_PATH && export PATH=/usr/local/bin:$PATH && tapes serve proxy --config-dir /workspace/.tapes --sqlite /workspace/.tapes/tapes.sqlite & sleep 2 && ~/venv/bin/python3 scripts/agent.py /workspace"
+workdir = "/workspace"
+restart = "no"
