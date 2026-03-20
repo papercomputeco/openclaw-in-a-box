@@ -1,35 +1,51 @@
 # claw-stereo
 
-OpenClaw setup for running agents in stereOS VMs with Tapes telemetry.
+Run OpenClaw in a stereOS VM with Tapes telemetry.
+
+## Lifecycle
+
+```
+mb up       →  install.sh (deps)  →  start.sh  →  openclaw onboard (first run)
+                                                →  openclaw gateway  (subsequent runs)
+mb down     →  VM destroyed, secrets gone
+mb up       →  install.sh (cached) → start.sh  →  openclaw gateway  (config persisted)
+```
+
+Onboarding happens once. Config persists on the shared mount (`.openclaw/`).
+Secrets live in tmpfs -- destroyed on `mb down`. Tapes captures the audit trail.
 
 ## Quickstart
 
-### stereOS
-
 ```bash
-mb up          # boot VM, install openclaw + tapes
-mb attach      # attach to the VM
-```
+# First time: boots VM, installs deps, runs openclaw onboard
+mb up
 
-### Local
+# Attach to watch / interact
+mb attach
 
-```bash
-bash scripts/install.sh
+# Tear down (secrets destroyed, config + tapes persist)
+mb down
+
+# Next time: boots VM, skips onboard, starts gateway directly
+mb up
 ```
 
 ## What's Included
 
-- `jcard.toml` -- stereos VM config (opencode-mixtape, claude-code harness)
-- `scripts/install.sh` -- NixOS/macOS setup (openclaw, tapes CLI, permissions)
-- `src/tape-reader.ts` -- reads conversation data from `.tapes/tapes.sqlite`
-- `src/tape-writer.ts` -- writes conversation nodes to `.tapes/tapes.sqlite`
+| File | Purpose |
+|------|---------|
+| `jcard.toml` | stereOS VM config (resources, network, secrets, agent prompt) |
+| `scripts/install.sh` | Installs Node.js, OpenClaw, Tapes CLI in the VM |
+| `scripts/start.sh` | Onboard-once-then-gateway lifecycle |
+| `src/tape-reader.ts` | Read conversation data from `.tapes/tapes.sqlite` |
+| `src/tape-writer.ts` | Write conversation nodes to `.tapes/tapes.sqlite` |
 
-## Use as Template
+## After a session
 
-1. Fork or copy this repo
-2. Add your agent logic
-3. Update the `[agent] prompt` in `jcard.toml` to run your agent
-4. Update `SKILL.md` with your skill's metadata
+```bash
+tapes deck              # explore telemetry
+tapes search "query"    # search session turns
+```
 
 ## Development
 

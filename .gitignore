@@ -5,6 +5,9 @@ output/*
 # Tapes telemetry
 .tapes/
 
+# OpenClaw config (created by onboard, persists across mb up/down)
+.openclaw/
+
 # Node
 node_modules/
 dist/

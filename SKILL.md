@@ -1,58 +1,29 @@
 ---
 name: claw-stereo
-description: "OpenClaw setup for running agents in stereOS VMs with Tapes telemetry."
+description: "Run OpenClaw in a stereOS VM with Tapes telemetry. Onboard once, spin up and down."
 version: 0.1.0
 metadata:
-  { "openclaw": { "emoji": "🔧", "requires": { "bins": [], "env": [] }, "install": [{ "id": "setup", "kind": "shell", "label": "Run install.sh" }] } }
+  { "openclaw": { "emoji": "🔧", "requires": { "bins": [], "env": ["ANTHROPIC_API_KEY"] }, "install": [{ "id": "setup", "kind": "shell", "label": "Run install.sh" }] } }
 ---
 
-# OpenClaw Tapes Setup
+# claw-stereo
 
-Minimal openclaw configuration for running agents in stereOS VMs with Tapes telemetry.
+Run OpenClaw in a stereOS VM with Tapes telemetry.
 
-## Overview
+## How it works
 
-- **jcard.toml** defines the VM configuration
-- **install.sh** installs OpenClaw, Tapes, and fixes NixOS quirks
-- **src/tape-reader.ts** reads conversation data from `.tapes/tapes.sqlite`
-- **src/tape-writer.ts** writes conversation nodes to `.tapes/tapes.sqlite`
-
-## Setup
-
-```bash
-cd {baseDir}
-bash scripts/install.sh
-```
+1. `mb up` boots a stereOS VM and runs `install.sh` (Node.js, OpenClaw, Tapes)
+2. `start.sh` checks if OpenClaw is onboarded:
+   - **First run:** runs `openclaw onboard` (interactive setup)
+   - **After that:** runs `openclaw gateway` (starts the control plane)
+3. Config persists in `.openclaw/` on the shared mount across `mb up`/`mb down`
+4. Secrets (API keys) live in tmpfs -- destroyed when the VM tears down
+5. Tapes captures all LLM interactions in `.tapes/tapes.sqlite`
 
 ## Usage
 
-### Run in stereOS VM
-
 ```bash
-mb up       # Boot VM, install openclaw + tapes
-mb attach   # Attach to the VM
-```
-
-### After a session
-
-```bash
-tapes deck              # Explore telemetry
-tapes search "query"    # Search session turns
-```
-
-## File Structure
-
-```
-claw-stereo/
-├── SKILL.md              # This file
-├── jcard.toml            # stereOS VM config
-├── .tapes/               # Tapes telemetry (gitignored)
-├── scripts/
-│   └── install.sh        # Setup script (openclaw, tapes, permissions)
-├── src/
-│   ├── index.ts          # Package exports
-│   ├── tape-reader.ts    # Tapes SQLite reader
-│   └── tape-writer.ts    # Tapes SQLite writer
-├── references/           # Domain-specific data
-└── tests/                # Test suite
+mb up           # boot + onboard (first time) or start gateway
+mb attach       # interact with the agent
+mb down         # tear down VM (config persists, secrets destroyed)
 ```
