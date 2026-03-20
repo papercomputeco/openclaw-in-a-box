@@ -1,4 +1,4 @@
-# claw-stereo
+# openclaw-in-a-box
 
 Run OpenClaw in a stereOS VM with Tapes telemetry.
 
@@ -14,7 +14,7 @@ Run OpenClaw in a stereOS VM with Tapes telemetry.
 mb up
 
 # SSH in
-mb ssh claw-stereo
+mb ssh openclaw-in-a-box
 
 # Install openclaw + tapes (first time)
 bash /workspace/scripts/install.sh

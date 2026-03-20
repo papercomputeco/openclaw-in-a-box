@@ -1,12 +1,12 @@
 ---
-name: claw-stereo
+name: openclaw-in-a-box
 description: "Run OpenClaw in a stereOS VM with Tapes telemetry. Onboard once, spin up and down."
 version: 0.1.0
 metadata:
   { "openclaw": { "emoji": "🔧", "requires": { "bins": [], "env": ["ANTHROPIC_API_KEY"] }, "install": [{ "id": "setup", "kind": "shell", "label": "Run install.sh" }] } }
 ---
 
-# claw-stereo
+# openclaw-in-a-box
 
 Run OpenClaw in a stereOS VM with Tapes telemetry.
 

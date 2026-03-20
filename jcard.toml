@@ -2,7 +2,7 @@
 
 mixtape = "opencode-mixtape:latest"
 
-name = "claw-stereo"
+name = "openclaw-in-a-box"
 
 [resources]
 cpus   = 2

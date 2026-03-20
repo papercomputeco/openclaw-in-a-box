@@ -1,5 +1,5 @@
 {
-  "name": "claw-stereo",
+  "name": "openclaw-in-a-box",
   "version": "0.1.0",
   "description": "OpenClaw setup for running agents in stereOS VMs with Tapes telemetry",
   "type": "module",
