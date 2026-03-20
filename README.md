@@ -14,6 +14,11 @@ mb up       →  install.sh (cached) → start.sh  →  openclaw gateway  (confi
 Onboarding happens once. Config persists on the shared mount (`.openclaw/`).
 Secrets live in tmpfs -- destroyed on `mb down`. Tapes captures the audit trail.
 
+## Prerequisites
+
+- [Master Blaster](https://github.com/papercomputeco/masterblaster) (`mb` CLI)
+- `ANTHROPIC_API_KEY` exported in your shell (e.g. in `.zshrc`)
+
 ## Quickstart
 
 ```bash
