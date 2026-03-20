@@ -7,7 +7,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
 
-echo "=== OpenClaw Skill Setup ==="
+echo "=== OpenClaw Setup ==="
 echo "Skill directory: $SKILL_DIR"
 
 # ---------------------------------------------------------------------------
@@ -30,42 +30,21 @@ if $IS_NIXOS; then
 fi
 
 # ---------------------------------------------------------------------------
-# Python
-# ---------------------------------------------------------------------------
-if ! command -v python3 &>/dev/null; then
-    if $IS_NIXOS; then
-        echo "Installing Python via nix..."
-        nix profile install nixpkgs#python312
-    else
-        echo "ERROR: python3 not found. Install Python 3.10+ first."
-        exit 1
-    fi
-fi
-
-PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-echo "Python version: $PYTHON_VERSION"
-
-# ---------------------------------------------------------------------------
-# Python venv (NixOS needs this to avoid writing to /nix/store)
-# ---------------------------------------------------------------------------
-if $IS_NIXOS; then
-    if [ ! -d "$HOME/venv" ]; then
-        echo "Creating Python venv..."
-        python3 -m venv "$HOME/venv"
-    fi
-    # Install any pip dependencies here:
-    # "$HOME/venv/bin/pip" install --quiet <your-deps>
-else
-    echo "Local environment -- using system Python"
-fi
-
-# ---------------------------------------------------------------------------
 # Writable directories (shared mount permissions)
 # ---------------------------------------------------------------------------
 for dir in output .tapes; do
     mkdir -p "$SKILL_DIR/$dir"
     chmod a+rwx "$SKILL_DIR/$dir" 2>/dev/null || true
 done
+
+# ---------------------------------------------------------------------------
+# OpenClaw
+# ---------------------------------------------------------------------------
+if ! command -v openclaw &>/dev/null; then
+    echo ""
+    echo "Installing OpenClaw..."
+    curl -fsSL https://openclaw.ai/install.sh | bash
+fi
 
 # ---------------------------------------------------------------------------
 # Tapes CLI

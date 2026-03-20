@@ -5,12 +5,9 @@ output/*
 # Tapes telemetry
 .tapes/
 
-# Python
-__pycache__/
-*.pyc
-*.egg-info/
-venv/
-.venv/
+# Node
+node_modules/
+dist/
 
 # OS
 .DS_Store
@@ -18,4 +15,3 @@ venv/
 # Data files users bring
 rom/
 data/
-.coverage

@@ -3,7 +3,7 @@ name: claw-stereo
 description: "OpenClaw setup for running agents in stereOS VMs with Tapes telemetry."
 version: 0.1.0
 metadata:
-  { "openclaw": { "emoji": "🔧", "requires": { "bins": ["python3"], "env": [] }, "install": [{ "id": "setup", "kind": "shell", "label": "Run install.sh" }] } }
+  { "openclaw": { "emoji": "🔧", "requires": { "bins": [], "env": [] }, "install": [{ "id": "setup", "kind": "shell", "label": "Run install.sh" }] } }
 ---
 
 # OpenClaw Tapes Setup
@@ -13,13 +13,9 @@ Minimal openclaw configuration for running agents in stereOS VMs with Tapes tele
 ## Overview
 
 - **jcard.toml** defines the VM configuration
-- **install.sh** handles NixOS/macOS dependency setup and Tapes installation
-- **tape_reader.py** reads conversation data from `.tapes/tapes.sqlite`
-
-## Requirements
-
-- Python 3.11+
-- stereOS VM (via Master Blaster) or local environment
+- **install.sh** installs OpenClaw, Tapes, and fixes NixOS quirks
+- **src/tape-reader.ts** reads conversation data from `.tapes/tapes.sqlite`
+- **src/tape-writer.ts** writes conversation nodes to `.tapes/tapes.sqlite`
 
 ## Setup
 
@@ -33,7 +29,7 @@ bash scripts/install.sh
 ### Run in stereOS VM
 
 ```bash
-mb up       # Boot VM, install deps, start tapes proxy
+mb up       # Boot VM, install openclaw + tapes
 mb attach   # Attach to the VM
 ```
 
@@ -52,15 +48,11 @@ claw-stereo/
 ├── jcard.toml            # stereOS VM config
 ├── .tapes/               # Tapes telemetry (gitignored)
 ├── scripts/
-│   ├── install.sh        # Setup script (python, tapes, permissions)
-│   └── tape_reader.py    # Tapes SQLite reader (stdlib only)
+│   └── install.sh        # Setup script (openclaw, tapes, permissions)
+├── src/
+│   ├── index.ts          # Package exports
+│   ├── tape-reader.ts    # Tapes SQLite reader
+│   └── tape-writer.ts    # Tapes SQLite writer
 ├── references/           # Domain-specific data
 └── tests/                # Test suite
 ```
-
-## Customizing
-
-1. Add your agent script to `scripts/` and update `jcard.toml` agent prompt
-2. Add dependencies to `pyproject.toml` and `install.sh`
-3. Update `jcard.toml` resource limits and secrets as needed
-4. Update this SKILL.md with your skill's description
