@@ -31,4 +31,3 @@ readonly = false
 
 [secrets]
 ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
-GMAIL_OAUTH_TOKEN = "${GMAIL_OAUTH_TOKEN}"
