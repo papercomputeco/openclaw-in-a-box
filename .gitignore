@@ -1,0 +1,20 @@
+# Runtime output
+output/*
+!output/.gitkeep
+
+# Tapes telemetry
+.tapes/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+venv/
+.venv/
+
+# OS
+.DS_Store
+
+# Data files users bring
+rom/
+data/
