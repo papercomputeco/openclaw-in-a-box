@@ -27,19 +27,30 @@ openclaw onboard
 bash /workspace/scripts/start.sh
 ```
 
+## Commands
+
+| Command | What it does |
+|---------|-------------|
+| `mb up` | Boot the VM, mount `./` at `/workspace`, inject secrets via tmpfs |
+| `mb ssh openclaw-in-a-box` | SSH into the running VM |
+| `mb down` | Stop the VM. Secrets destroyed, config + tapes persist on host |
+| `mb destroy openclaw-in-a-box` | Remove the VM and all its resources |
+| `mb status openclaw-in-a-box` | Check if the VM is running |
+
 ## Lifecycle
 
 ```
 mb up          →  VM boots, shared mount at /workspace
 mb ssh         →  install.sh (first time) → openclaw onboard (first time)
                                            → openclaw gateway (after onboard)
-mb down        →  VM destroyed, secrets gone
-mb up + ssh    →  install cached, openclaw config persisted in .openclaw/
+mb down        →  VM stopped, secrets gone, config persisted
+mb up + ssh    →  install cached, skip onboard, start gateway
+mb destroy     →  VM removed entirely
 ```
 
-Config persists on the shared mount (`.openclaw/`).
-Secrets live in tmpfs -- destroyed on `mb down`.
-Tapes captures the audit trail in `.tapes/`.
+- **Config** persists on the shared mount (`.openclaw/`) across `mb down`/`mb up` cycles
+- **Secrets** live in tmpfs -- destroyed on `mb down`
+- **Tapes** captures the audit trail in `.tapes/`
 
 ## What's Included
 
