@@ -5,7 +5,11 @@ Run OpenClaw in a stereOS VM with Tapes telemetry.
 ## Prerequisites
 
 - [Master Blaster](https://github.com/papercomputeco/masterblaster) (`mb` CLI)
-- `ANTHROPIC_API_KEY` exported in your shell (e.g. in `.zshrc`)
+- `ANTHROPIC_API_KEY` exported in your shell — the VM injects it via tmpfs at boot:
+  ```bash
+  export ANTHROPIC_API_KEY="sk-ant-..."
+  ```
+  Add this to your `.zshrc` or `.bashrc` so it's always available.
 
 ## Quickstart
 
@@ -51,6 +55,42 @@ mb destroy     →  VM removed entirely
 - **Config** persists on the shared mount (`.openclaw/`) across `mb down`/`mb up` cycles
 - **Secrets** live in tmpfs -- destroyed on `mb down`
 - **Tapes** captures the audit trail in `.tapes/`
+
+## Architecture
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  HOST                                                        │
+│                                                              │
+│  $ mb up / ssh / down / destroy                              │
+│       │                                                      │
+│       │  reads jcard.toml                                    │
+│       │  injects ANTHROPIC_API_KEY via tmpfs                 │
+│       │  mounts ./ → /workspace                              │
+│       ▼                                                      │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │  stereOS VM  (NixOS · 2 CPU · 4 GiB)                  │  │
+│  │                                                        │  │
+│  │  install.sh ──► Node 22 + OpenClaw CLI + Tapes CLI     │  │
+│  │                                                        │  │
+│  │  start.sh ──┬──► tapes serve proxy  (background)       │  │
+│  │             │       ▲                                   │  │
+│  │             │       │  intercepts LLM traffic           │  │
+│  │             │       ▼                                   │  │
+│  │             └──► openclaw gateway ◄──► api.anthropic.com│  │
+│  │                                                        │  │
+│  │  egress: api.anthropic.com, openclaw.ai, npmjs.org     │  │
+│  └────────────────────────────────────────────────────────┘  │
+│       │                                                      │
+│       │  shared mount (persists across mb down/up)           │
+│       ▼                                                      │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │  .openclaw/          agent config + .onboarded marker  │  │
+│  │  .tapes/tapes.sqlite telemetry (TapeReader/TapeWriter) │  │
+│  │  output/             agent work products               │  │
+│  └────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────┘
+```
 
 ## What's Included
 
