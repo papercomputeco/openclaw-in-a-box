@@ -11,7 +11,7 @@ disk   = "20GiB"
 
 [network]
 mode = "nat"
-egress_allow = ["api.anthropic.com"]
+egress_allow = ["api.anthropic.com", "openclaw.ai", "registry.npmjs.org"]
 
 [[shared]]
 host = "./"
@@ -22,7 +22,7 @@ readonly = false
 ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
 
 [agent]
-harness = "claude-code"
-prompt = "cd /workspace && bash scripts/install.sh && bash scripts/start.sh"
+harness = "custom"
+prompt = "bash /workspace/scripts/install.sh && bash /workspace/scripts/start.sh"
 workdir = "/workspace"
 restart = "no"
