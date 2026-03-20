@@ -1,0 +1,34 @@
+# jcard.toml — stereOS VM configuration for Gmail triage agent
+
+mixtape = "opencode-mixtape:latest"
+
+name = "gmail-triage"
+
+[resources]
+cpus   = 2
+memory = "4GiB"
+disk   = "20GiB"
+
+[network]
+mode = "nat"
+egress_allow = [
+  "api.anthropic.com",
+  "openclaw.ai",
+  "registry.npmjs.org",
+  "gmail.googleapis.com",
+  "oauth2.googleapis.com",
+  "accounts.google.com",
+  "www.googleapis.com",
+]
+
+[timeout]
+duration = "2h"
+
+[[shared]]
+host = "./"
+guest = "/workspace"
+readonly = false
+
+[secrets]
+ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
+GMAIL_OAUTH_TOKEN = "${GMAIL_OAUTH_TOKEN}"
