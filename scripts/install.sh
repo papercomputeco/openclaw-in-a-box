@@ -30,6 +30,21 @@ if $IS_NIXOS; then
 fi
 
 # ---------------------------------------------------------------------------
+# Node.js (required for openclaw)
+# ---------------------------------------------------------------------------
+if ! command -v node &>/dev/null; then
+    if $IS_NIXOS; then
+        echo "Installing Node.js via nix..."
+        nix profile install nixpkgs#nodejs_22
+    else
+        echo "ERROR: node not found. Install Node.js 20+ first."
+        exit 1
+    fi
+fi
+
+echo "Node version: $(node --version)"
+
+# ---------------------------------------------------------------------------
 # Writable directories (shared mount permissions)
 # ---------------------------------------------------------------------------
 for dir in output .tapes; do

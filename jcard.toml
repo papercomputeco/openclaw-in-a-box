@@ -26,6 +26,6 @@ readonly = false
 
 [agent]
 harness = "claude-code"
-prompt = "cd /workspace && bash scripts/install.sh && export LD_LIBRARY_PATH=$HOME/.nix-profile/lib:$LD_LIBRARY_PATH && export PATH=/usr/local/bin:$PATH && tapes serve proxy --config-dir /workspace/.tapes --sqlite /workspace/.tapes/tapes.sqlite & sleep 2"
+prompt = "cd /workspace && bash scripts/install.sh && export LD_LIBRARY_PATH=$HOME/.nix-profile/lib:$LD_LIBRARY_PATH && export PATH=/usr/local/bin:$PATH && tapes serve proxy --config-dir /workspace/.tapes --sqlite /workspace/.tapes/tapes.sqlite & sleep 2 && openclaw onboard"
 workdir = "/workspace"
 restart = "no"
