@@ -20,9 +20,3 @@ readonly = false
 
 [secrets]
 ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
-
-[agent]
-harness = "custom"
-prompt = "bash /workspace/scripts/install.sh && bash /workspace/scripts/start.sh"
-workdir = "/workspace"
-restart = "no"
