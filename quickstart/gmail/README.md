@@ -15,24 +15,39 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 brew install steipete/tap/gogcli
 ```
 
-## 1. Authenticate Gmail
+## 1. Create Google OAuth Credentials
 
-Set up Google OAuth credentials and connect your Gmail account:
+You need a Google Cloud "Desktop app" OAuth client. This is a one-time setup:
+
+1. **Create a Google Cloud project** at [console.cloud.google.com/projectcreate](https://console.cloud.google.com/projectcreate)
+2. **Enable the Gmail API** at [console.cloud.google.com/apis/library/gmail.googleapis.com](https://console.cloud.google.com/apis/library/gmail.googleapis.com)
+3. **Configure the OAuth consent screen** at [console.cloud.google.com/auth/branding](https://console.cloud.google.com/auth/branding)
+   - Choose "External" user type
+   - Add your email as a test user
+4. **Create OAuth credentials** at [console.cloud.google.com/auth/clients](https://console.cloud.google.com/auth/clients)
+   - Application type: **Desktop app**
+   - Download the JSON file (it will be named `client_secret_*.json`)
+
+## 2. Authenticate Gmail
 
 ```bash
-# Point gog at your Google OAuth client credentials
-gog auth credentials /path/to/client_secret.json
+# Store the OAuth client credentials (one-time)
+gog auth credentials ~/Downloads/client_secret_*.json
 
-# Connect your Gmail account
+# Connect your Gmail account — opens a browser for authorization
 gog auth add you@gmail.com --services gmail
 
 # Verify the connection
 gog auth list
+
+# Test it works
+export GOG_ACCOUNT=you@gmail.com
+gog gmail labels list
 ```
 
-Need a Google OAuth client? Create one at [console.cloud.google.com](https://console.cloud.google.com/apis/credentials) with the Gmail API enabled.
+The refresh token is stored in your system keychain. On a headless server, `gog auth add` prints a URL you can open in a local browser, then paste the redirect URL back into the terminal.
 
-## 2. Configure
+## 3. Configure
 
 The included `jcard.toml` declares a `gmail-triage` VM with:
 - Gmail + Anthropic API egress only (no other network access)
@@ -52,7 +67,7 @@ egress_allow = [
 duration = "2h"
 ```
 
-## 3. Launch
+## 4. Launch
 
 ```bash
 cd quickstart/gmail
@@ -72,7 +87,7 @@ bash /workspace/scripts/start.sh
 
 On first run, `openclaw onboard` will prompt for interactive setup. Subsequent runs skip straight to the gateway.
 
-## 4. The Agent Triages
+## 5. The Agent Triages
 
 The `gmail-triage` skill uses the `gog` CLI to access Gmail and instructs the agent to:
 
@@ -85,7 +100,7 @@ The `gmail-triage` skill uses the `gog` CLI to access Gmail and instructs the ag
 
 The agent never deletes messages or sends replies. Every action is logged to [Tapes](https://tapes.dev) for a full audit trail.
 
-## 5. Review Results
+## 6. Review Results
 
 ```bash
 # From inside the VM
@@ -97,7 +112,7 @@ cat output/INBOX_REPORT.md
 
 The report includes total messages processed, counts per category, and subject lines for everything flagged `action-needed`.
 
-## 6. Teardown
+## 7. Teardown
 
 ```bash
 # Stop the VM — credentials destroyed from memory
