@@ -1,6 +1,6 @@
 # openclaw-in-a-box
 
-Run OpenClaw in a stereOS VM with Tapes telemetry.
+Run OpenClaw in a [stereOS](https://stereos.ai) VM with [Tapes](https://tapes.dev) telemetry.
 
 ## Prerequisites
 
@@ -96,7 +96,7 @@ mb destroy     →  VM removed entirely
 
 | File | Purpose |
 |------|---------|
-| `jcard.toml` | stereOS VM config (resources, network, secrets) |
+| [`jcard.toml`](https://stereos.ai/reference/jcard-schema/) | stereOS VM config (resources, network, secrets) |
 | `scripts/install.sh` | Installs Node.js, OpenClaw, Tapes CLI in the VM |
 | `scripts/start.sh` | Starts tapes proxy + openclaw gateway |
 | `src/tape-reader.ts` | Read conversation data from `.tapes/tapes.sqlite` |
