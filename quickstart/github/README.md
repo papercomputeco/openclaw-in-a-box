@@ -27,7 +27,7 @@ The agent accepts any target — an org, a single repo, or a username:
 ## 1. Configure
 
 The included `jcard.toml` declares a `github-org-triage` VM with:
-- GitHub + Anthropic API egress only (no other network access)
+- Restricted egress: GitHub, Anthropic API, OpenClaw, and npm registry only
 - 1-hour timeout (triage runs are fast)
 - Token injected via tmpfs (RAM-only, never written to disk)
 
@@ -55,7 +55,7 @@ mb up
 # SSH in
 mb ssh github-org-triage
 
-# Install openclaw + tapes + gh (first time only)
+# Install openclaw + tapes (first time only; gh CLI is preinstalled in this image)
 bash /workspace/scripts/install.sh
 
 # Start the agent

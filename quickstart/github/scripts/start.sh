@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Start the GitHub org triage agent inside a stereOS VM.
-# Requires: openclaw + tapes + gh installed via install.sh
+# Requires: openclaw + tapes (via install.sh) and gh CLI (preinstalled in mixtape image)
 
 set -euo pipefail
 
@@ -11,18 +11,29 @@ export PATH="$HOME/.npm-global/bin:/usr/local/bin:$PATH"
 export LD_LIBRARY_PATH="${HOME}/.nix-profile/lib:${LD_LIBRARY_PATH:-}"
 export OPENCLAW_HOME="${SKILL_DIR}/.openclaw"
 
-# Ensure output directory exists
+# Ensure required directories exist
+mkdir -p "$OPENCLAW_HOME"
 mkdir -p "$SKILL_DIR/output"
 
-# Verify gh CLI is available and authenticated
-if ! command -v gh &>/dev/null; then
-    echo "ERROR: gh CLI not found. Run install.sh first."
-    exit 1
-fi
+# Verify required CLIs are available
+for cmd in gh tapes openclaw; do
+    if ! command -v "$cmd" &>/dev/null; then
+        echo "ERROR: $cmd not found. Run install.sh first."
+        exit 1
+    fi
+done
 
-if ! gh auth status &>/dev/null 2>&1; then
-    echo "Authenticating gh with GH_TOKEN..."
-    gh auth status || echo "WARN: gh auth failed — check GH_TOKEN"
+# Validate GitHub authentication
+if [ -n "${GH_TOKEN:-}" ]; then
+    echo "Validating GH_TOKEN via GitHub API..."
+    if ! gh api user &>/dev/null 2>&1; then
+        echo "ERROR: GH_TOKEN appears invalid or lacks required permissions."
+        exit 1
+    fi
+else
+    echo "ERROR: gh CLI is not authenticated and GH_TOKEN is not set."
+    echo "       Run 'gh auth login' or set GH_TOKEN with appropriate scopes."
+    exit 1
 fi
 
 # Tapes proxy (background) — captures all LLM traffic for audit
