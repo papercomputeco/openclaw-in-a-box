@@ -29,4 +29,4 @@ readonly = false
 
 [secrets]
 ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
-GITHUB_TOKEN = "${GITHUB_TOKEN}"
+GH_TOKEN = "${GH_TOKEN}"

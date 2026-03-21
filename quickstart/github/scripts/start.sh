@@ -21,8 +21,8 @@ if ! command -v gh &>/dev/null; then
 fi
 
 if ! gh auth status &>/dev/null 2>&1; then
-    echo "Authenticating gh with GITHUB_TOKEN..."
-    gh auth status || echo "WARN: gh auth failed — check GITHUB_TOKEN"
+    echo "Authenticating gh with GH_TOKEN..."
+    gh auth status || echo "WARN: gh auth failed — check GH_TOKEN"
 fi
 
 # Tapes proxy (background) — captures all LLM traffic for audit

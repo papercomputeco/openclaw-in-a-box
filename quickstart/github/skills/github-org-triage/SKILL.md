@@ -4,7 +4,7 @@ description: "Scan a GitHub org's open PRs and issues. Flag stale, blocked, and 
 version: 0.1.0
 user-invocable: true
 metadata:
-  { "openclaw": { "emoji": "🦑", "requires": { "bins": ["gh"], "env": ["GITHUB_TOKEN", "ANTHROPIC_API_KEY"] } } }
+  { "openclaw": { "emoji": "🦑", "requires": { "bins": ["gh"], "env": ["GH_TOKEN", "ANTHROPIC_API_KEY"] } } }
 ---
 
 # GitHub Org Triage
@@ -13,7 +13,7 @@ You are a GitHub org sheriff. Your job is to scan all repositories in a GitHub o
 
 ## Setup
 
-Use the `gh` CLI (GitHub CLI) to access the GitHub API. The `GITHUB_TOKEN` environment variable is already set.
+Use the `gh` CLI (GitHub CLI) to access the GitHub API. The `GH_TOKEN` environment variable is already set and `gh` picks it up automatically.
 
 ```bash
 gh auth status

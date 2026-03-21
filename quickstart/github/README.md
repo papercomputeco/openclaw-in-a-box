@@ -6,37 +6,17 @@ Daily org sheriff in an ephemeral agent. Boot a stereOS VM, let OpenClaw scan yo
 
 - [Master Blaster](https://github.com/papercomputeco/masterblaster) (`mb` CLI)
 - `ANTHROPIC_API_KEY` exported in your shell
-- A GitHub personal access token with `repo` and `read:org` scopes
+- `GH_TOKEN` — the `gh` CLI picks this up automatically for API access
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
-export GITHUB_TOKEN="ghp_..."
-```
-
-## 1. Create a GitHub Token
-
-1. Go to [github.com/settings/tokens](https://github.com/settings/tokens?type=beta)
-2. Click **Generate new token** (fine-grained recommended)
-3. Select your organization under **Resource owner**
-4. Grant **Repository access** to all repos (or select specific ones)
-5. Under **Permissions**, enable:
-   - Issues: **Read-only**
-   - Pull requests: **Read-only**
-   - Metadata: **Read-only**
-   - (Optional) Issues: **Read and write** if you want the agent to create follow-up issues
-6. Copy the token and export it:
-
-```bash
-export GITHUB_TOKEN="github_pat_..."
-```
-
-## 2. Set Your Org
-
-```bash
+export GH_TOKEN="ghp_..."
 export GITHUB_ORG="papercomputeco"
 ```
 
-## 3. Configure
+If you don't have a token yet, create one at [github.com/settings/tokens](https://github.com/settings/tokens?type=beta) with `repo` and `read:org` scopes. For fine-grained tokens, grant read-only access to Issues, Pull requests, and Metadata.
+
+## 1. Configure
 
 The included `jcard.toml` declares a `github-org-triage` VM with:
 - GitHub + Anthropic API egress only (no other network access)
@@ -56,7 +36,7 @@ egress_allow = [
 duration = "1h"
 ```
 
-## 4. Launch
+## 2. Launch
 
 ```bash
 cd quickstart/github
@@ -76,7 +56,7 @@ bash /workspace/scripts/start.sh
 
 On first run, `openclaw onboard` will prompt for interactive setup. Subsequent runs skip straight to the gateway.
 
-## 5. The Agent Triages
+## 3. The Agent Triages
 
 The `github-org-triage` skill scans all repos in your org and classifies open items:
 
@@ -95,7 +75,7 @@ To let the agent create lightweight follow-up issues (e.g., requesting repro ste
 export TRIAGE_CREATE_ISSUES=true
 ```
 
-## 6. Review Results
+## 4. Review Results
 
 ```bash
 # From inside the VM
@@ -107,7 +87,7 @@ cat output/ORG_TRIAGE_REPORT.md
 
 The report includes urgent items, PRs needing review, stale threads, suggested actions, and stats across all repos scanned.
 
-## 7. Teardown
+## 5. Teardown
 
 ```bash
 # Stop the VM — token destroyed from memory
