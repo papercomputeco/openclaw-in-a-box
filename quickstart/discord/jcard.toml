@@ -1,0 +1,33 @@
+# jcard.toml — stereOS VM configuration for Discord bot agent
+
+mixtape = "opencode-mixtape:latest"
+
+name = "discord-bot"
+
+[resources]
+cpus   = 2
+memory = "4GiB"
+disk   = "20GiB"
+
+[network]
+mode = "nat"
+egress_allow = [
+  "api.anthropic.com",
+  "openclaw.ai",
+  "registry.npmjs.org",
+  "discord.com",
+  "gateway.discord.gg",
+  "cdn.discordapp.com",
+]
+
+[timeout]
+duration = "2h"
+
+[[shared]]
+host = "./"
+guest = "/workspace"
+readonly = false
+
+[secrets]
+ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
+DISCORD_TOKEN = "${DISCORD_TOKEN}"
