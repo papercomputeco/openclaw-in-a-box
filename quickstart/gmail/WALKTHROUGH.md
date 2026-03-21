@@ -182,7 +182,7 @@ Here's what `start.sh` does in order:
      ○ gh CLI not found — GitHub triage skill unavailable
      ○ DISCORD_TOKEN not set — Discord bot skill unavailable
    ```
-4. **Starts Tapes proxy** — background process on port 8080 that intercepts all Anthropic API calls
+4. **Starts Tapes proxy** — background process on port 8080 that intercepts all Anthropic API calls. Writes to `.tapes/vm/tapes.vm.sqlite` — a dedicated black box recorder for the agent, completely separate from any host-side telemetry. This separation is critical: the agent's decision log should never be mixed with the user's coding sessions. (See [Agents Need Black Box Recorders](https://papercompute.com/blog/agents-need-black-box-recorders/))
 5. **Onboards OpenClaw** (first run) — `openclaw onboard --non-interactive --accept-risk --skip-health`
 6. **Starts the gateway** — `openclaw gateway run --verbose`
 
@@ -232,10 +232,14 @@ Safety constraints baked into the skill: never delete messages, never send repli
 
 ## Step 6: Verify Telemetry
 
-The Tapes proxy captures every LLM interaction. Check the proxy log:
+The Tapes proxy inside the VM captures every LLM interaction to the agent's dedicated black box: `.tapes/vm/tapes.vm.sqlite`.
+
+This is deliberately separate from the host-side `.tapes/tapes.sqlite` (which records the user's coding sessions with Claude Code). The agent's decision log is its own isolated record — you can hand it to an auditor, replay it for debugging, or analyze it for self-learning without noise from unrelated sessions.
+
+Check the proxy log:
 
 ```bash
-cat /workspace/.tapes/start.log | grep "conversation stored"
+cat /workspace/.tapes/vm/start.log | grep "conversation stored"
 ```
 
 ```
@@ -244,7 +248,7 @@ cat /workspace/.tapes/start.log | grep "conversation stored"
 {"time":"2026-03-21T09:39:45","level":"INFO","msg":"conversation stored","head":"8575f5d0...","provider":"anthropic"}
 ```
 
-Each entry is a complete conversation turn stored in `.tapes/tapes.sqlite`. The hash chain means you can trace the full reasoning sequence — what the agent saw, what it decided, and why.
+Each entry is a complete conversation turn stored with a content-addressed hash. The hash chain means you can trace the full reasoning sequence — what the agent saw, what it decided, and why.
 
 The SQLite database contains a `nodes` table with:
 - `role` — user/assistant
@@ -254,7 +258,7 @@ The SQLite database contains a `nodes` table with:
 - `content` — the full request and response
 - `created_at` — timestamp
 
-This is the audit trail. If the agent miscategorizes an email, you can replay the conversation to see exactly what input it received and what reasoning it produced.
+This is the flight recorder. If the agent miscategorizes an email, you can replay the conversation to see exactly what input it received and what reasoning it produced. Over time, these recordings become training data for understanding where agents make mistakes and how to improve the skills that drive them.
 
 ## Step 7: Teardown
 
@@ -270,7 +274,7 @@ The moment `mb down` runs:
 
 What persists on the shared mount:
 - `.openclaw/` — agent config, so next boot skips onboarding
-- `.tapes/tapes.sqlite` — the full audit trail
+- `.tapes/vm/tapes.vm.sqlite` — the agent's black box recording
 - `output/` — reports
 
 Next time: `mb up` → `mb ssh` → `bash /workspace/scripts/start.sh` → agent is ready.
@@ -306,9 +310,9 @@ Next time: `mb up` → `mb ssh` → `bash /workspace/scripts/start.sh` → agent
 │       │                                                      │
 │       │  shared mount (persists across restarts)             │
 │       ▼                                                      │
-│  .openclaw/           agent config                           │
-│  .tapes/tapes.sqlite  telemetry (every LLM call)            │
-│  output/              INBOX_REPORT.md                        │
+│  .openclaw/                agent config                      │
+│  .tapes/vm/tapes.vm.sqlite agent black box (isolated)       │
+│  output/                   INBOX_REPORT.md                   │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -325,6 +329,8 @@ Next time: `mb up` → `mb ssh` → `bash /workspace/scripts/start.sh` → agent
 **gog token export/import bridges host and VM.** The OAuth refresh token lives in the host's system keychain. The VM has no GUI keychain. The solution: `gog auth tokens export` on the host creates a portable JSON file, `gog auth tokens import` inside the VM loads it into a password-protected file-based keyring. The portable file should be deleted immediately after import.
 
 **Non-interactive onboard is essential for automation.** `openclaw onboard` normally requires TTY input. `--non-interactive --accept-risk --skip-health` lets `start.sh` run the full pipeline without human intervention after the first setup.
+
+**Separate the agent's black box from host telemetry.** We initially had both the host-side Tapes (recording the user's Claude Code session) and the VM-side Tapes (recording the agent) writing to the same `.tapes/tapes.sqlite`. This made it impossible to distinguish agent decisions from user coding activity. The fix: the VM writes to `.tapes/vm/tapes.vm.sqlite` — a dedicated flight recorder for the agent. This clean separation is essential for auditing, debugging, and eventually using the recordings as training data for self-learning. Agents need their own black box. (See [Agents Need Black Box Recorders](https://papercompute.com/blog/agents-need-black-box-recorders/))
 
 ## The Skill That Drives It All
 

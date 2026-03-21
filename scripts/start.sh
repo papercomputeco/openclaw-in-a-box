@@ -69,11 +69,17 @@ fi
 echo ""
 
 # ---------------------------------------------------------------------------
-# Tapes proxy (background) — captures all LLM traffic
+# Tapes proxy (background) — the agent's black box recorder
 # ---------------------------------------------------------------------------
+# The VM gets its own tapes.vm.sqlite, separate from the host's tapes.sqlite.
+# This keeps the agent's decision log clean — no mixing with the user's
+# coding sessions. See: https://papercompute.com/blog/agents-need-black-box-recorders/
+VM_TAPES_DIR="$SKILL_DIR/.tapes/vm"
+mkdir -p "$VM_TAPES_DIR"
+
 tapes serve proxy \
-    --config-dir "$SKILL_DIR/.tapes" \
-    --sqlite "$SKILL_DIR/.tapes/tapes.sqlite" &
+    --config-dir "$VM_TAPES_DIR" \
+    --sqlite "$VM_TAPES_DIR/tapes.vm.sqlite" &
 sleep 2
 
 # ---------------------------------------------------------------------------
