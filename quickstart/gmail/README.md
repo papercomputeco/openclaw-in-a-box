@@ -146,3 +146,12 @@ quickstart/gmail/
 ├── output/                       # Agent writes INBOX_REPORT.md here
 └── README.md                     # This file
 ```
+
+## References
+
+- [gog CLI (gogcli)](https://github.com/steipete/gogcli) — Google Workspace bridge for Gmail, Calendar, Drive, and more
+- [gogcli.sh](https://gogcli.sh/) — gog documentation and examples
+- [OpenClaw Skills](https://docs.openclaw.ai/tools/skills) — how skills work, SKILL.md format, loading precedence
+- [OpenClaw Gmail PubSub](https://docs.openclaw.ai/automation/gmail-pubsub) — real-time Gmail integration with webhooks
+- [stereOS jcard schema](https://stereos.ai/reference/jcard-schema/) — VM configuration reference
+- [Tapes](https://tapes.dev) — audit trail and telemetry for agent actions
