@@ -1,65 +1,121 @@
 ---
 name: openclaw-in-a-box
-description: "Run OpenClaw in a stereOS VM with Tapes telemetry. Onboard once, spin up and down."
-version: 0.1.0
+description: "Orchestrator skill: detects environment, asks user which integrations to enable, drives setup, and hands off to sub-skills."
+version: 0.2.0
+user-invocable: true
 metadata:
-  { "openclaw": { "emoji": "🔧", "requires": { "bins": [], "env": ["ANTHROPIC_API_KEY"] }, "install": [{ "id": "setup", "kind": "shell", "label": "Run install.sh" }] } }
+  { "openclaw": { "emoji": "🦞", "requires": { "bins": [], "env": ["ANTHROPIC_API_KEY"] } } }
 ---
 
 # openclaw-in-a-box
 
-Run OpenClaw in a stereOS VM with Tapes telemetry.
+You are the setup orchestrator. Your job is to get the user from a fresh clone to a running agent with the integrations they actually want.
 
-## Required
+## Step 1: Detect environment
 
-`ANTHROPIC_API_KEY` must be exported on the host before `mb up`:
-```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
-```
-The VM injects this via tmpfs at boot. Without it, OpenClaw cannot reach the Anthropic API.
-
-## How it works
-
-1. `mb up` boots a stereOS VM and mounts `./` at `/workspace`
-2. `install.sh` installs Node.js 22, OpenClaw CLI, and Tapes CLI (first time only)
-3. `start.sh` starts the Tapes proxy, then checks if OpenClaw is onboarded:
-   - **First run:** runs `openclaw onboard` (interactive, requires human input)
-   - **After that:** runs `openclaw gateway` (starts the control plane)
-4. Config persists in `.openclaw/` on the shared mount across `mb up`/`mb down`
-5. Secrets (API keys) live in tmpfs -- destroyed when the VM tears down
-6. Tapes captures all LLM interactions in `.tapes/tapes.sqlite`
-
-## Usage
+Run these checks silently and report a status summary:
 
 ```bash
-mb up           # boot + onboard (first time) or start gateway
-mb attach       # interact with the agent
-mb down         # tear down VM (config persists, secrets destroyed)
+# Host tools
+command -v mb    # Master Blaster CLI
+echo $ANTHROPIC_API_KEY | head -c 10  # API key present (don't print full key)
+
+# Integration tools
+command -v gog   # Gmail bridge
+gog auth list    # Gmail account connected
+command -v gh    # GitHub CLI
+gh auth status   # GitHub authenticated
+echo ${DISCORD_TOKEN:+set}  # Discord token present
 ```
 
-## Combining Integrations
+Print a short status table:
 
-Three quickstart integrations are available — Gmail, GitHub, and Discord. Each can run standalone, but they can also be combined into a single VM for a unified agent that triages your inbox, scans your GitHub org, and responds in Discord.
+```
+Environment:
+  mb CLI:          ✓ installed
+  ANTHROPIC_API_KEY: ✓ set
 
-To set up all three:
+Integrations:
+  Gmail:   ✗ gog CLI not found
+  GitHub:  ✓ gh authenticated
+  Discord: ✗ DISCORD_TOKEN not set
+```
 
-1. **Merge secrets** — export all required tokens on the host:
+## Step 2: Ask what they want
+
+Ask the user which integrations to enable. Don't assume all three. Present only the ones that aren't already set up:
+
+- **Gmail Triage** — archive newsletters, label receipts, star action items
+- **GitHub Org Triage** — flag stale PRs, blocked issues, release risk
+- **Discord Bot** — respond to mentions, summarize threads
+
+If everything is already configured, skip to Step 4.
+
+## Step 3: Drive setup for each chosen integration
+
+### Gmail setup
+
+1. Install gog: `brew install steipete/tap/gogcli`
+2. Walk user through Google Cloud Console:
+   - Create project at console.cloud.google.com/projectcreate
+   - Enable Gmail API
+   - Configure OAuth consent screen (External, add test user)
+   - Create Desktop app OAuth credentials
+   - Download `client_secret_*.json`
+3. Register credentials: `gog auth credentials ~/Downloads/client_secret_*.json`
+4. Authenticate (requires user interaction — opens browser):
    ```bash
-   export ANTHROPIC_API_KEY="sk-ant-..."
-   export GH_TOKEN="ghp_..."
-   export DISCORD_TOKEN="your-bot-token"
+   gog auth add USER@gmail.com --services gmail
    ```
-2. **Merge `jcard.toml`** — combine the `egress_allow` lists and `[secrets]` blocks from each quickstart into a single `jcard.toml`.
-3. **Merge skills** — copy all skill directories into a single `skills/` folder:
-   ```
-   skills/
-   ├── gmail-triage/SKILL.md
-   ├── github-org-triage/SKILL.md
-   └── discord-bot/SKILL.md
-   ```
-4. **Update `start.sh`** — validate all tokens and point the gateway at the combined skills directory.
+5. Verify: `gog auth list` and `gog gmail labels list`
 
-The agent loads all skills at startup and can switch between them based on the channel or command. See each quickstart's README for per-integration setup details:
-- [Gmail Triage](quickstart/gmail/)
-- [GitHub Org Triage](quickstart/github/)
-- [Discord Bot](quickstart/discord/)
+### GitHub setup
+
+1. Install gh if missing: `brew install gh`
+2. Authenticate (requires user interaction):
+   ```bash
+   gh auth login
+   ```
+   Or if user has a token: `export GH_TOKEN="ghp_..."`
+3. Verify: `gh auth status`
+
+### Discord setup
+
+1. Walk user through Discord Developer Portal:
+   - Create application at discord.com/developers/applications
+   - Create bot, copy token
+   - Enable Message Content Intent
+   - Generate invite URL with bot + applications.commands scopes
+2. Export token: `export DISCORD_TOKEN="..."`
+3. Remind user to add the export to their shell profile
+
+## Step 4: Boot and run
+
+Once the chosen integrations are configured:
+
+```bash
+cd /path/to/openclaw-in-a-box
+mb up
+mb ssh openclaw-in-a-box
+bash /workspace/scripts/install.sh   # first time
+bash /workspace/scripts/start.sh
+```
+
+Report which skills loaded and which integrations are active.
+
+## Step 5: Hand off to sub-skills
+
+Once the gateway is running, the user invokes skills directly:
+
+- `/gmail-triage` — triage unread inbox
+- `/github-org-triage papercomputeco` — scan an org
+- `/discord-bot report` — generate activity report
+
+Each skill has its own rules in `skills/`. You don't need to know their internals — just get the user to the point where they can invoke them.
+
+## Rules
+
+- Never store secrets in files. Tokens go in env vars or system keychains.
+- If a setup step requires user interaction (OAuth browser flow, password entry), tell the user to run the command themselves. Don't try to automate password entry.
+- If a step fails, diagnose the error and suggest a fix. Don't retry blindly.
+- Only set up what the user asked for. Don't push integrations they didn't choose.

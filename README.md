@@ -5,11 +5,10 @@ Run OpenClaw in a [stereOS](https://stereos.ai) VM with [Tapes](https://tapes.de
 ## Prerequisites
 
 - [Master Blaster](https://github.com/papercomputeco/masterblaster) (`mb` CLI)
-- `ANTHROPIC_API_KEY` exported in your shell — the VM injects it via tmpfs at boot:
+- `ANTHROPIC_API_KEY` exported in your shell:
   ```bash
   export ANTHROPIC_API_KEY="sk-ant-..."
   ```
-  Add this to your `.zshrc` or `.bashrc` so it's always available.
 
 ## Quickstart
 
@@ -23,25 +22,29 @@ mb ssh openclaw-in-a-box
 # Install openclaw + tapes (first time)
 bash /workspace/scripts/install.sh
 
-# Onboard openclaw (first time, interactive)
-export PATH="$HOME/.npm-global/bin:$PATH"
-openclaw onboard
-
-# Subsequent runs: start the gateway directly
+# Start the agent
 bash /workspace/scripts/start.sh
 ```
 
-## Quickstart Guides
+On first run, `start.sh` runs `openclaw onboard` (interactive). Subsequent runs start the gateway directly with all skills loaded.
 
-| Guide | Description |
-|-------|-------------|
-| [Gmail Triage](quickstart/gmail/) | Sunday inbox cleanup with an ephemeral Gmail agent |
-| [GitHub Org Triage](quickstart/github/) | Daily org sheriff that flags stale PRs, blocked issues, and release risk |
-| [Discord Bot](quickstart/discord/) | Interactive AI bot for your Discord server |
+## Integrations
 
-Each guide includes its own `jcard.toml`, OpenClaw skills, and scripts. See the guide README for setup instructions.
+The VM comes pre-configured for three integrations. Set up whichever ones you need -- the agent loads all available skills at startup.
 
-Want all three in one VM? Merge the `egress_allow` lists and `[secrets]` blocks into a single `jcard.toml`, drop all skill folders into one `skills/` directory, and export every token before `mb up`. The gateway loads all skills at startup and switches between them based on channel or command. See the [Combining Integrations](SKILL.md#combining-integrations) section for details.
+| Integration | Setup Guide | What It Does |
+|-------------|-------------|--------------|
+| [Gmail Triage](quickstart/gmail/) | Google OAuth + `gog` CLI | Archive newsletters, label receipts, flag action items |
+| [GitHub Org Triage](quickstart/github/) | `GH_TOKEN` + `gh` CLI | Flag stale PRs, blocked issues, release risk |
+| [Discord Bot](quickstart/discord/) | `DISCORD_TOKEN` | Respond to mentions, summarize threads |
+
+Each guide walks through the one-time credential setup for that integration. Export the tokens before `mb up`:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export GH_TOKEN="ghp_..."           # optional, for GitHub triage
+export DISCORD_TOKEN="your-token"    # optional, for Discord bot
+```
 
 ## Commands
 
@@ -57,7 +60,8 @@ Want all three in one VM? Merge the `egress_allow` lists and `[secrets]` blocks 
 
 ```
 mb up          →  VM boots, shared mount at /workspace
-mb ssh         →  install.sh (first time) → openclaw onboard (first time)
+mb ssh         →  install.sh (first time) → start.sh
+                                           → openclaw onboard (first time)
                                            → openclaw gateway (after onboard)
 mb down        →  VM stopped, secrets gone, config persisted
 mb up + ssh    →  install cached, skip onboard, start gateway
@@ -77,11 +81,11 @@ mb destroy     →  VM removed entirely
 │  $ mb up / ssh / down / destroy                              │
 │       │                                                      │
 │       │  reads jcard.toml                                    │
-│       │  injects ANTHROPIC_API_KEY via tmpfs                 │
+│       │  injects secrets via tmpfs                           │
 │       │  mounts ./ → /workspace                              │
 │       ▼                                                      │
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │  stereOS VM  (NixOS · 2 CPU · 4 GiB)                  │  │
+│  │  stereOS VM  (NixOS · 2 CPU · 4 GiB · 2h timeout)     │  │
 │  │                                                        │  │
 │  │  install.sh ──► Node 22 + OpenClaw CLI + Tapes CLI     │  │
 │  │                                                        │  │
@@ -89,18 +93,22 @@ mb destroy     →  VM removed entirely
 │  │             │       ▲                                   │  │
 │  │             │       │  intercepts LLM traffic           │  │
 │  │             │       ▼                                   │  │
-│  │             └──► openclaw gateway ◄──► api.anthropic.com│  │
+│  │             └──► openclaw gateway ◄──► Claude API       │  │
+│  │                       │                                 │  │
+│  │                       ├──► gog    ◄──► Gmail API        │  │
+│  │                       ├──► gh     ◄──► GitHub API       │  │
+│  │                       └──► discord ◄──► Discord API     │  │
 │  │                                                        │  │
-│  │  egress: api.anthropic.com, openclaw.ai, npmjs.org     │  │
+│  │  skills/gmail-triage/    SKILL.md                       │  │
+│  │  skills/github-org-triage/ SKILL.md                     │  │
+│  │  skills/discord-bot/     SKILL.md                       │  │
 │  └────────────────────────────────────────────────────────┘  │
 │       │                                                      │
 │       │  shared mount (persists across mb down/up)           │
 │       ▼                                                      │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │  .openclaw/          agent config + .onboarded marker  │  │
-│  │  .tapes/tapes.sqlite telemetry (TapeReader/TapeWriter) │  │
-│  │  output/             agent work products               │  │
-│  └────────────────────────────────────────────────────────┘  │
+│  .openclaw/              agent config + .onboarded marker     │
+│  .mb/tapes/tapes.sqlite  agent black box (VM telemetry)      │
+│  output/                 agent work products                 │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -110,9 +118,9 @@ mb destroy     →  VM removed entirely
 |------|---------|
 | [`jcard.toml`](https://stereos.ai/reference/jcard-schema/) | stereOS VM config (resources, network, secrets) |
 | `scripts/install.sh` | Installs Node.js, OpenClaw, Tapes CLI in the VM |
-| `scripts/start.sh` | Starts tapes proxy + openclaw gateway |
-| `src/tape-reader.ts` | Read conversation data from `.tapes/tapes.sqlite` |
-| `src/tape-writer.ts` | Write conversation nodes to `.tapes/tapes.sqlite` |
+| `scripts/start.sh` | Starts tapes proxy + openclaw gateway with all skills |
+| `skills/` | Agent skills for Gmail, GitHub, and Discord integrations |
+| `quickstart/` | Per-integration credential setup guides |
 
 ## Development
 
