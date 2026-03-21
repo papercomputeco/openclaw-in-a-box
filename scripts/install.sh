@@ -107,8 +107,9 @@ if ! command -v gog &>/dev/null; then
             INTERP=$(find /nix/store -name "ld-linux-*.so.1" 2>/dev/null | head -1)
             if [ -n "$INTERP" ]; then
                 command -v patchelf &>/dev/null || nix profile install nixpkgs#patchelf
-                patchelf --set-interpreter "$INTERP" /usr/local/bin/gog
-                echo "Patched gog binary for NixOS"
+                patchelf --set-interpreter "$INTERP" /usr/local/bin/gog 2>/dev/null \
+                    && echo "Patched gog binary for NixOS" \
+                    || echo "gog is statically linked (no patching needed)"
             fi
         fi
     elif command -v brew &>/dev/null; then

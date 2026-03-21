@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Start openclaw inside the stereOS VM.
-# Onboards on first run (interactive), starts gateway on subsequent runs.
+# Loads secrets from stereOS tmpfs, starts Tapes proxy, runs the gateway.
 
 set -euo pipefail
 
@@ -11,10 +11,39 @@ export PATH="$HOME/.npm-global/bin:/usr/local/bin:$PATH"
 export LD_LIBRARY_PATH="${HOME}/.nix-profile/lib:${LD_LIBRARY_PATH:-}"
 export OPENCLAW_HOME="${SKILL_DIR}/.openclaw"
 
+# ---------------------------------------------------------------------------
+# Load secrets from stereOS tmpfs (/run/stereos/secrets/)
+# ---------------------------------------------------------------------------
+SECRETS_DIR="/run/stereos/secrets"
+if [ -d "$SECRETS_DIR" ]; then
+    for secret_file in "$SECRETS_DIR"/*; do
+        key="$(basename "$secret_file")"
+        val="$(sudo cat "$secret_file" 2>/dev/null || true)"
+        if [ -n "$val" ]; then
+            export "$key"="$val"
+        fi
+    done
+fi
+
 # Ensure output directory exists
 mkdir -p "$SKILL_DIR/output"
 
-# Check which integrations are available (warn, don't fail)
+# ---------------------------------------------------------------------------
+# Copy skills into openclaw's skill directory (if not already there)
+# ---------------------------------------------------------------------------
+OPENCLAW_SKILLS="/home/admin/.npm-global/lib/node_modules/openclaw/skills"
+if [ -d "$SKILL_DIR/skills" ] && [ -d "$OPENCLAW_SKILLS" ]; then
+    for skill_dir in "$SKILL_DIR/skills"/*/; do
+        skill_name="$(basename "$skill_dir")"
+        if [ ! -d "$OPENCLAW_SKILLS/$skill_name" ]; then
+            cp -r "$skill_dir" "$OPENCLAW_SKILLS/$skill_name"
+        fi
+    done
+fi
+
+# ---------------------------------------------------------------------------
+# Check which integrations are available
+# ---------------------------------------------------------------------------
 echo "=== Checking integrations ==="
 
 if command -v gog &>/dev/null; then
@@ -39,13 +68,17 @@ fi
 
 echo ""
 
-# Tapes proxy (background)
+# ---------------------------------------------------------------------------
+# Tapes proxy (background) — captures all LLM traffic
+# ---------------------------------------------------------------------------
 tapes serve proxy \
     --config-dir "$SKILL_DIR/.tapes" \
     --sqlite "$SKILL_DIR/.tapes/tapes.sqlite" &
 sleep 2
 
-# Onboard once, then gateway
+# ---------------------------------------------------------------------------
+# Onboard once, then start gateway
+# ---------------------------------------------------------------------------
 if [ ! -f "$OPENCLAW_HOME/.onboarded" ]; then
     echo "=== First run: onboarding openclaw ==="
     openclaw onboard --non-interactive --accept-risk --skip-health
@@ -53,4 +86,4 @@ if [ ! -f "$OPENCLAW_HOME/.onboarded" ]; then
 fi
 
 echo "=== Starting openclaw gateway ==="
-openclaw gateway --skills-dir "$SKILL_DIR/skills" --verbose
+openclaw gateway run --verbose
