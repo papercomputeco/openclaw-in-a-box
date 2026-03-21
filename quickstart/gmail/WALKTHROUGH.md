@@ -330,7 +330,61 @@ Next time: `mb up` → `mb ssh` → `bash /workspace/scripts/start.sh` → agent
 
 **Non-interactive onboard is essential for automation.** `openclaw onboard` normally requires TTY input. `--non-interactive --accept-risk --skip-health` lets `start.sh` run the full pipeline without human intervention after the first setup.
 
-**Separate the agent's black box from host telemetry.** We initially had both the host-side Tapes (recording the user's Claude Code session) and the VM-side Tapes (recording the agent) writing to the same `.tapes/tapes.sqlite`. This made it impossible to distinguish agent decisions from user coding activity. The fix: the VM writes to `.mb/tapes/tapes.sqlite` — a dedicated flight recorder for the agent. This clean separation is essential for auditing, debugging, and eventually using the recordings as training data for self-learning. Agents need their own black box. (See [Agents Need Black Box Recorders](https://papercompute.com/blog/agents-need-black-box-recorders/))
+**Separate the agent's black box from host telemetry.** See the dedicated section below.
+
+## The `.mb/tapes/` Pattern: Agent Black Box Recorders
+
+This is the most important architectural decision in the project and one we think should become a convention for any VM-based agent runtime.
+
+### The Problem
+
+When we first set this up, both the host-side Tapes proxy (recording the developer's Claude Code session) and the VM-side Tapes proxy (recording the OpenClaw agent) were writing to the same `.tapes/tapes.sqlite`. The result: a single database with interleaved entries from two completely different contexts. You couldn't tell which rows were the agent deciding to archive a newsletter vs the developer asking Claude Code to fix a bug in `start.sh`.
+
+This defeats the purpose of telemetry. An audit trail that mixes operator activity with autonomous agent decisions is useless for:
+
+- **Compliance** — "Show me exactly what the agent did with access to this Gmail account"
+- **Debugging** — "The agent miscategorized an email, replay its reasoning"
+- **Self-learning** — "Analyze 100 triage sessions to find classification patterns the agent gets wrong"
+
+### The Fix
+
+The VM's agent writes to `.mb/tapes/tapes.sqlite`. The host's developer tools write to `.tapes/tapes.sqlite`. Two databases, clean separation.
+
+```
+.tapes/tapes.sqlite       ← Host: developer coding sessions (Claude Code, etc.)
+.mb/tapes/tapes.sqlite    ← VM: agent black box (OpenClaw via Tapes proxy)
+```
+
+The `.mb/` directory is the namespace for Master Blaster-managed VM data. The agent's telemetry belongs there because it's produced by a process running inside the MB-managed VM. It persists on the shared mount (survives `mb down`/`mb up`) but is clearly separated from host-side tooling.
+
+### Why `.mb/tapes/` Specifically
+
+- **`.mb/`** signals "this data was produced by a Master Blaster VM." Other MB-managed state could live here too (agent config, session snapshots, crash dumps).
+- **`tapes/`** within `.mb/` keeps the Tapes convention. The SQLite schema is the same. Any tool that reads Tapes data works on both files.
+- **Not `.tapes/vm/`** because nesting it under the host's `.tapes/` directory implies the host owns it. The VM's data should have its own top-level namespace.
+
+### What This Enables
+
+With a clean agent-only recording, you can:
+
+1. **Audit a session** — `sqlite3 .mb/tapes/tapes.sqlite "SELECT role, content FROM nodes ORDER BY created_at"` gives you the full conversation between the agent and Claude, with no noise.
+2. **Measure cost** — sum `prompt_tokens` and `completion_tokens` for just the agent's work, separate from developer usage.
+3. **Replay decisions** — the hash-chained `nodes` table lets you walk the agent's reasoning tree for any triage run.
+4. **Train improvements** — aggregate recordings across sessions to identify where the agent's skill definitions need refinement. Which email categories does it struggle with? What prompts lead to better classification?
+5. **Compare runs** — diff two triage sessions to see if a skill edit improved or degraded performance.
+
+### Proposal for Master Blaster
+
+This pattern should be the default in `mb`. When a VM writes telemetry, logs, or session data to the shared mount, it should go under `.mb/` — not mixed into the host project's own tooling directories. `mb` could:
+
+- Create `.mb/` automatically on first `mb up`
+- Add `.mb/` to `.gitignore` during `mb init`
+- Provide `mb tapes` as a convenience command to query `.mb/tapes/tapes.sqlite`
+- Support `mb tapes export` to extract a session recording for sharing or archival
+
+The flight recorder metaphor is apt. Every commercial aircraft has a black box. Every autonomous agent should too — and it should be the runtime's responsibility to provide it, not something each project has to wire up manually.
+
+(See [Agents Need Black Box Recorders](https://papercompute.com/blog/agents-need-black-box-recorders/) for the full argument.)
 
 ## The Skill That Drives It All
 
