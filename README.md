@@ -36,6 +36,7 @@ bash /workspace/scripts/start.sh
 | Guide | Description |
 |-------|-------------|
 | [Gmail Triage](quickstart/gmail/) | Sunday inbox cleanup with an ephemeral Gmail agent |
+| [Discord Bot](quickstart/discord/) | Interactive AI bot for your Discord server |
 
 Each guide includes its own `jcard.toml`, OpenClaw skills, and scripts. See the guide README for setup instructions.
 
