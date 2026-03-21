@@ -1,24 +1,57 @@
-# Building an Ephemeral Gmail Triage Agent with OpenClaw, stereOS, and Tapes
+# Ship a Secure OpenClaw Setup in Minutes
 
-How we set up an AI agent that triages a Gmail inbox inside an ephemeral VM — where credentials only exist in RAM, every LLM call is logged, and the network is locked to an allowlist.
+In February 2026, Meta's director of AI alignment gave an OpenClaw agent access to her Gmail inbox. The agent speedran deleting over 200 emails while ignoring her commands to stop. She had to physically run to her Mac to kill the process. The root cause: context window compaction dropped the safety constraint that said "ask before acting."
+
+This wasn't a failure of OpenClaw. It was a failure of how the agent was deployed. No network boundary. No kill switch beyond physically reaching the machine. No flight recorder to replay what the agent saw, what it decided, and why it ignored the stop command.
+
+This project exists to make that scenario impossible.
+
+## What stereOS Gives You
+
+**stereOS** is the runtime that keeps the agent in a box. It's an ephemeral VM platform built for exactly this problem:
+
+- **Network egress allowlist.** The agent can only reach the APIs you explicitly permit. Gmail, Anthropic, npm — nothing else. If the agent tries to `curl` somewhere unexpected, the network layer blocks it. This isn't application-level filtering — it's at the VM's network stack.
+- **Secrets in tmpfs.** API keys are injected into RAM-backed storage at boot. They're never written to disk. The moment the VM stops, they're gone. No `.env` files sitting on a server.
+- **Auto-teardown timeout.** The VM self-destructs after 2 hours. If you walk away, credentials don't linger. The agent doesn't keep running overnight.
+- **Declarative config.** One `jcard.toml` file defines the entire sandbox: resources, network policy, secrets, timeout. Reproducible, auditable, version-controlled.
+
+Without stereOS, you're running an agent with full network access and persistent credentials. That's how emails get deleted.
+
+## What Tapes Gives You
+
+**Tapes** is the flight recorder. It sits between the agent and the LLM API as a transparent proxy, capturing every request and response to SQLite.
+
+When the Meta incident happened, there was no way to replay the agent's reasoning. Why did it start deleting? What did the compacted context look like? At what point did it lose the safety constraint? Without a recording, all you have is the outcome: 200 emails gone.
+
+With Tapes, you get:
+
+- **Every LLM call logged.** The full prompt, the full response, token counts, timestamps. Content-addressed with hash chains so the sequence is tamper-evident.
+- **Isolated black box.** The agent's recordings live in `.mb/tapes/tapes.sqlite` — separate from any host-side telemetry. You can hand this file to an auditor, replay it for debugging, or aggregate sessions for self-learning.
+- **Replay any decision.** Walk the hash chain to see: the agent received this email list → it classified this message as a newsletter → it decided to archive. If something goes wrong, you know exactly where and why.
+- **Cost tracking.** Sum `prompt_tokens` and `completion_tokens` across sessions to measure what agent autonomy actually costs.
+
+Over time, these recordings become training data. Analyze 100 triage sessions to find where the skill definition falls short. Which email categories does the agent struggle with? Which prompts produce better classification? The black box isn't just for compliance — it's how agents get better.
+
+(See [Agents Need Black Box Recorders](https://papercompute.com/blog/agents-need-black-box-recorders/) for the full argument.)
+
+## OpenClaw in the Box
+
+**OpenClaw** is the agent framework. It's powerful — Markdown-driven skills, a WebSocket gateway, Claude-powered reasoning. But power without guardrails is how inboxes get deleted.
+
+openclaw-in-a-box is the reference implementation for running OpenClaw responsibly:
+
+- **stereOS** provides the sandbox — network boundaries, ephemeral credentials, auto-teardown
+- **Tapes** provides the flight recorder — every decision logged, replayable, auditable
+- **OpenClaw** provides the agent — skill-driven, extensible, Claude-powered
+
+The result: you know exactly what the agent can reach, exactly what it decided, and the whole thing self-destructs when you're done.
 
 ## The Stack
 
-- **OpenClaw** — agent framework powered by Claude. Loads skills from Markdown files, runs a WebSocket gateway, dispatches commands to the LLM.
-- **stereOS** — ephemeral VMs managed by Master Blaster (`mb` CLI). NixOS-based, with tmpfs secrets, network egress allowlists, and auto-teardown timeouts.
-- **Tapes** — telemetry proxy that sits between the agent and the Anthropic API. Every LLM request and response is logged to SQLite.
-- **gog** — CLI bridge for Google Workspace. Handles OAuth, stores refresh tokens in the system keychain, provides Gmail access via shell commands.
-
-## Why This Architecture
-
-The typical approach to building a Gmail bot: long-running process on a server, credentials in a `.env` file, no audit trail of what the AI decided or why.
-
-This setup inverts all of that:
-
-- **Credentials live in RAM.** The `ANTHROPIC_API_KEY` is injected into the VM via tmpfs at boot. When the VM stops, it's gone. Never written to disk.
-- **Network is sandboxed.** The VM can only reach Anthropic's API, Gmail's API, OpenClaw's registry, and npm. If the agent hallucinates a `curl` to some random URL, the network blocks it.
-- **Every decision is logged.** The Tapes proxy intercepts all LLM traffic and stores it in SQLite. You can replay the agent's reasoning after the fact.
-- **2-hour timeout.** If you forget about the VM, it self-destructs. Credentials don't linger.
+- **OpenClaw** — agent framework. Loads skills from Markdown, runs a gateway, dispatches to Claude.
+- **stereOS** — ephemeral VM runtime. Network sandboxing, tmpfs secrets, auto-teardown.
+- **Tapes** — telemetry proxy. Every LLM call recorded to SQLite with hash chains.
+- **gog** — CLI bridge for Google Workspace. OAuth, keychain storage, Gmail access.
 
 ## Prerequisites
 
@@ -258,7 +291,32 @@ The SQLite database contains a `nodes` table with:
 - `content` — the full request and response
 - `created_at` — timestamp
 
-This is the flight recorder. If the agent miscategorizes an email, you can replay the conversation to see exactly what input it received and what reasoning it produced. Over time, these recordings become training data for understanding where agents make mistakes and how to improve the skills that drive them.
+This is the flight recorder. If the agent miscategorizes an email, you can replay the conversation to see exactly what input it received and what reasoning it produced.
+
+### What a Tapes Session Looks Like
+
+Query the black box directly to see the agent's reasoning:
+
+```bash
+# From the host — the .mb/ directory is on the shared mount
+sqlite3 .mb/tapes/tapes.sqlite \
+  "SELECT role, substr(content, 1, 200) FROM nodes ORDER BY created_at DESC LIMIT 4"
+```
+
+```
+assistant | [{"text":"Here's your inbox triage for the last 2 days (20 threads):
+            \n\n## Needs Attention\n- CA DMV — Complete Your REAL ID Application
+            \n- MIXTAPE MEETUP - Virtual #02 — Calendar invite..."}]
+user      | [{"type":"tool_result"}]
+assistant | [{"tool_input":{"command":"gog gmail messages list ..."},...}]
+user      | /gmail-triage
+```
+
+Read bottom to top: the user invoked `/gmail-triage`, the agent called `gog` to list messages, received the results, then produced the classification. Every step is captured.
+
+Now imagine the Meta incident with this recording. You'd see exactly where in the conversation the safety constraint was present, exactly when context compaction dropped it, and exactly which LLM response first decided to delete instead of ask. The difference between "200 emails gone, no idea why" and a complete forensic replay.
+
+Over time, these recordings become training data. Analyze 100 triage sessions to find where skill definitions fall short. Which email categories does the agent struggle with? The black box isn't just for incident response — it's how agents get better.
 
 ## Step 7: Teardown
 

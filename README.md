@@ -70,7 +70,7 @@ mb destroy     →  VM removed entirely
 
 - **Config** persists on the shared mount (`.openclaw/`) across `mb down`/`mb up` cycles
 - **Secrets** live in tmpfs -- destroyed on `mb down`
-- **Tapes** captures the audit trail in `.tapes/`
+- **Tapes** captures the agent's black box in `.mb/tapes/`
 
 ## Architecture
 
