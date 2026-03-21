@@ -11,7 +11,27 @@ disk   = "20GiB"
 
 [network]
 mode = "nat"
-egress_allow = ["api.anthropic.com", "openclaw.ai", "registry.npmjs.org"]
+egress_allow = [
+  # core
+  "api.anthropic.com",
+  "openclaw.ai",
+  "registry.npmjs.org",
+  # gmail
+  "gmail.googleapis.com",
+  "oauth2.googleapis.com",
+  "accounts.google.com",
+  "www.googleapis.com",
+  # github
+  "api.github.com",
+  "github.com",
+  # discord
+  "discord.com",
+  "gateway.discord.gg",
+  "cdn.discordapp.com",
+]
+
+[timeout]
+duration = "2h"
 
 [[shared]]
 host = "./"
@@ -20,3 +40,5 @@ readonly = false
 
 [secrets]
 ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
+GH_TOKEN = "${GH_TOKEN}"
+DISCORD_TOKEN = "${DISCORD_TOKEN}"

@@ -11,6 +11,34 @@ export PATH="$HOME/.npm-global/bin:/usr/local/bin:$PATH"
 export LD_LIBRARY_PATH="${HOME}/.nix-profile/lib:${LD_LIBRARY_PATH:-}"
 export OPENCLAW_HOME="${SKILL_DIR}/.openclaw"
 
+# Ensure output directory exists
+mkdir -p "$SKILL_DIR/output"
+
+# Check which integrations are available (warn, don't fail)
+echo "=== Checking integrations ==="
+
+if command -v gog &>/dev/null; then
+    echo "  ✓ gog CLI found (Gmail)"
+else
+    echo "  ○ gog CLI not found — Gmail triage skill unavailable"
+fi
+
+if command -v gh &>/dev/null && gh api user &>/dev/null 2>&1; then
+    echo "  ✓ gh CLI authenticated (GitHub)"
+elif command -v gh &>/dev/null; then
+    echo "  ○ gh CLI found but not authenticated — run 'gh auth login'"
+else
+    echo "  ○ gh CLI not found — GitHub triage skill unavailable"
+fi
+
+if [ -n "${DISCORD_TOKEN:-}" ]; then
+    echo "  ✓ DISCORD_TOKEN set (Discord)"
+else
+    echo "  ○ DISCORD_TOKEN not set — Discord bot skill unavailable"
+fi
+
+echo ""
+
 # Tapes proxy (background)
 tapes serve proxy \
     --config-dir "$SKILL_DIR/.tapes" \
@@ -24,5 +52,5 @@ if [ ! -f "$OPENCLAW_HOME/.onboarded" ]; then
     touch "$OPENCLAW_HOME/.onboarded"
 else
     echo "=== Starting openclaw gateway ==="
-    openclaw gateway --verbose
+    openclaw gateway --skills-dir "$SKILL_DIR/skills" --verbose
 fi
