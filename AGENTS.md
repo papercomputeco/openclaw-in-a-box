@@ -60,8 +60,7 @@ The gateway loads all skills from `skills/` and the agent can invoke them.
 |------|-----------------|
 | `/workspace/skills/` | Agent skills (gmail-triage, github-org-triage, discord-bot) |
 | `/workspace/.openclaw/` | Agent config, persists across restarts |
-| `/workspace/.tapes/vm/tapes.vm.sqlite` | Agent black box — every LLM call inside the VM |
-| `/workspace/.tapes/tapes.sqlite` | Host-side telemetry (user coding sessions, separate) |
+| `/workspace/.mb/tapes/tapes.sqlite` | Agent black box — every LLM call inside the VM |
 | `/workspace/output/` | Agent work products (INBOX_REPORT.md, etc.) |
 | `/workspace/scripts/install.sh` | One-time dependency installer |
 | `/workspace/scripts/start.sh` | Entrypoint (tapes proxy + openclaw gateway) |
@@ -81,5 +80,5 @@ The gateway loads all skills from `skills/` and the agent can invoke them.
 - **Secrets live in tmpfs** — destroyed when VM stops. Never written to disk.
 - **2-hour timeout** — VM auto-destructs if forgotten.
 - **Tapes captures everything** — every LLM interaction logged to SQLite for audit.
-- **Separate black box** — the VM's agent sessions are recorded in `.tapes/vm/tapes.vm.sqlite`, isolated from host-side telemetry. This is the agent's flight recorder.
+- **Separate black box** — the VM's agent sessions are recorded in `.mb/tapes/tapes.sqlite`, isolated from host-side telemetry. This is the agent's flight recorder.
 - **Skills are read-only by default** — gmail-triage never deletes or sends. github-org-triage never merges or closes.

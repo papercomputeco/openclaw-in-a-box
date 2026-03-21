@@ -71,15 +71,15 @@ echo ""
 # ---------------------------------------------------------------------------
 # Tapes proxy (background) — the agent's black box recorder
 # ---------------------------------------------------------------------------
-# The VM gets its own tapes.vm.sqlite, separate from the host's tapes.sqlite.
-# This keeps the agent's decision log clean — no mixing with the user's
-# coding sessions. See: https://papercompute.com/blog/agents-need-black-box-recorders/
-VM_TAPES_DIR="$SKILL_DIR/.tapes/vm"
+# Writes to .mb/tapes/, not .tapes/. The host's .tapes/ is for the user's
+# coding sessions. The VM's black box is MB-managed data.
+# See: https://papercompute.com/blog/agents-need-black-box-recorders/
+VM_TAPES_DIR="$SKILL_DIR/.mb/tapes"
 mkdir -p "$VM_TAPES_DIR"
 
 tapes serve proxy \
     --config-dir "$VM_TAPES_DIR" \
-    --sqlite "$VM_TAPES_DIR/tapes.vm.sqlite" &
+    --sqlite "$VM_TAPES_DIR/tapes.sqlite" &
 sleep 2
 
 # ---------------------------------------------------------------------------

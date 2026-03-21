@@ -182,7 +182,7 @@ Here's what `start.sh` does in order:
      ○ gh CLI not found — GitHub triage skill unavailable
      ○ DISCORD_TOKEN not set — Discord bot skill unavailable
    ```
-4. **Starts Tapes proxy** — background process on port 8080 that intercepts all Anthropic API calls. Writes to `.tapes/vm/tapes.vm.sqlite` — a dedicated black box recorder for the agent, completely separate from any host-side telemetry. This separation is critical: the agent's decision log should never be mixed with the user's coding sessions. (See [Agents Need Black Box Recorders](https://papercompute.com/blog/agents-need-black-box-recorders/))
+4. **Starts Tapes proxy** — background process on port 8080 that intercepts all Anthropic API calls. Writes to `.mb/tapes/tapes.sqlite` — a dedicated black box recorder for the agent, completely separate from any host-side telemetry. This separation is critical: the agent's decision log should never be mixed with the user's coding sessions. (See [Agents Need Black Box Recorders](https://papercompute.com/blog/agents-need-black-box-recorders/))
 5. **Onboards OpenClaw** (first run) — `openclaw onboard --non-interactive --accept-risk --skip-health`
 6. **Starts the gateway** — `openclaw gateway run --verbose`
 
@@ -232,14 +232,14 @@ Safety constraints baked into the skill: never delete messages, never send repli
 
 ## Step 6: Verify Telemetry
 
-The Tapes proxy inside the VM captures every LLM interaction to the agent's dedicated black box: `.tapes/vm/tapes.vm.sqlite`.
+The Tapes proxy inside the VM captures every LLM interaction to the agent's dedicated black box: `.mb/tapes/tapes.sqlite`.
 
 This is deliberately separate from the host-side `.tapes/tapes.sqlite` (which records the user's coding sessions with Claude Code). The agent's decision log is its own isolated record — you can hand it to an auditor, replay it for debugging, or analyze it for self-learning without noise from unrelated sessions.
 
 Check the proxy log:
 
 ```bash
-cat /workspace/.tapes/vm/start.log | grep "conversation stored"
+cat /workspace/.mb/tapes/start.log | grep "conversation stored"
 ```
 
 ```
@@ -274,7 +274,7 @@ The moment `mb down` runs:
 
 What persists on the shared mount:
 - `.openclaw/` — agent config, so next boot skips onboarding
-- `.tapes/vm/tapes.vm.sqlite` — the agent's black box recording
+- `.mb/tapes/tapes.sqlite` — the agent's black box recording
 - `output/` — reports
 
 Next time: `mb up` → `mb ssh` → `bash /workspace/scripts/start.sh` → agent is ready.
@@ -311,7 +311,7 @@ Next time: `mb up` → `mb ssh` → `bash /workspace/scripts/start.sh` → agent
 │       │  shared mount (persists across restarts)             │
 │       ▼                                                      │
 │  .openclaw/                agent config                      │
-│  .tapes/vm/tapes.vm.sqlite agent black box (isolated)       │
+│  .mb/tapes/tapes.sqlite agent black box (isolated)       │
 │  output/                   INBOX_REPORT.md                   │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -330,7 +330,7 @@ Next time: `mb up` → `mb ssh` → `bash /workspace/scripts/start.sh` → agent
 
 **Non-interactive onboard is essential for automation.** `openclaw onboard` normally requires TTY input. `--non-interactive --accept-risk --skip-health` lets `start.sh` run the full pipeline without human intervention after the first setup.
 
-**Separate the agent's black box from host telemetry.** We initially had both the host-side Tapes (recording the user's Claude Code session) and the VM-side Tapes (recording the agent) writing to the same `.tapes/tapes.sqlite`. This made it impossible to distinguish agent decisions from user coding activity. The fix: the VM writes to `.tapes/vm/tapes.vm.sqlite` — a dedicated flight recorder for the agent. This clean separation is essential for auditing, debugging, and eventually using the recordings as training data for self-learning. Agents need their own black box. (See [Agents Need Black Box Recorders](https://papercompute.com/blog/agents-need-black-box-recorders/))
+**Separate the agent's black box from host telemetry.** We initially had both the host-side Tapes (recording the user's Claude Code session) and the VM-side Tapes (recording the agent) writing to the same `.tapes/tapes.sqlite`. This made it impossible to distinguish agent decisions from user coding activity. The fix: the VM writes to `.mb/tapes/tapes.sqlite` — a dedicated flight recorder for the agent. This clean separation is essential for auditing, debugging, and eventually using the recordings as training data for self-learning. Agents need their own black box. (See [Agents Need Black Box Recorders](https://papercompute.com/blog/agents-need-black-box-recorders/))
 
 ## The Skill That Drives It All
 

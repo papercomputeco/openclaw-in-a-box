@@ -2,8 +2,11 @@
 output/*
 !output/.gitkeep
 
-# Tapes telemetry
+# Tapes telemetry (host coding sessions)
 .tapes/
+
+# VM black box (agent telemetry, managed by mb)
+.mb/
 
 # OpenClaw config (created by onboard, persists across mb up/down)
 .openclaw/
