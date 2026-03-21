@@ -240,20 +240,20 @@ The agent reads the `gmail-triage` skill (a Markdown file that defines classific
 
 ```
 ## Needs Attention
-- CA DMV — Complete Your REAL ID Application
-- MIXTAPE MEETUP - Virtual #02 — Calendar invite
+- State DMV: Complete your application (deadline approaching)
+- Team standup invite: Tuesday 9am PDT
 
 ## Worth a Glance
-- Porkbun Auto Renewal — Success
-- USPS Informed Delivery — daily mail digest
-- Turso Cloud Feedback — reaching out
+- Domain registrar: Auto-renewal successful
+- Shipping notification: Package arriving Thursday
+- SaaS vendor: Reaching out about your account
 
 ## Low Priority / FYI
-- Amazon order — Lego Movie 2 confirmation
-- Cash App — $16.57 at Py Cafe
-- Uber Receipt — Friday morning
-- ParentSquare (×3) — school digests
-- Bytes newsletter — "Vite+ enters the Matrix"
+- Purchase confirmation: Order #12345
+- Payment app: $16.57 at Coffee Shop
+- Ride receipt: Friday morning trip
+- School district (x3): Daily parent digests
+- Tech newsletter: Weekly roundup
 ```
 
 The skill defines four categories with specific actions:
@@ -309,8 +309,8 @@ sqlite3 .mb/tapes/tapes.sqlite \
 
 ```
 assistant | [{"text":"Here's your inbox triage for the last 2 days (20 threads):
-            \n\n## Needs Attention\n- CA DMV — Complete Your REAL ID Application
-            \n- MIXTAPE MEETUP - Virtual #02 — Calendar invite..."}]
+            \n\n## Needs Attention\n- State DMV: Complete your application
+            \n- Team standup invite: Tuesday 9am PDT..."}]
 user      | [{"type":"tool_result"}]
 assistant | [{"tool_input":{"command":"gog gmail messages list ..."},...}]
 user      | /gmail-triage

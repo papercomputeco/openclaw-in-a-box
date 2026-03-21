@@ -1,6 +1,9 @@
 # Runtime output
-output/*
-!output/.gitkeep
+output/
+
+# Local docs and references
+docs/
+references/
 
 # Tapes telemetry (host coding sessions)
 .tapes/
