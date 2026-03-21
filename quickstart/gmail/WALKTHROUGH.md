@@ -6,11 +6,13 @@ This wasn't a failure of OpenClaw. It was a failure of how the agent was deploye
 
 This project exists to make that scenario impossible.
 
+*This walkthrough was generated from Tapes session recordings. Every command, error, and decision described here comes from replaying the actual agent sessions captured in `.mb/tapes/tapes.sqlite` during development. That's the point: when you have the recordings, writing accurate technical content is just reading the tape.*
+
 ## What stereOS Gives You
 
 **stereOS** is the runtime that keeps the agent in a box. It's an ephemeral VM platform built for exactly this problem:
 
-- **Network egress allowlist.** The agent can only reach the APIs you explicitly permit. Gmail, Anthropic, npm — nothing else. If the agent tries to `curl` somewhere unexpected, the network layer blocks it. This isn't application-level filtering — it's at the VM's network stack.
+- **Network egress allowlist.** The agent can only reach the APIs you explicitly permit. Gmail, Anthropic, npm. Nothing else. If the agent tries to `curl` somewhere unexpected, the network layer blocks it. This isn't application-level filtering. It's at the VM's network stack.
 - **Secrets in tmpfs.** API keys are injected into RAM-backed storage at boot. They're never written to disk. The moment the VM stops, they're gone. No `.env` files sitting on a server.
 - **Auto-teardown timeout.** The VM self-destructs after 2 hours. If you walk away, credentials don't linger. The agent doesn't keep running overnight.
 - **Declarative config.** One `jcard.toml` file defines the entire sandbox: resources, network policy, secrets, timeout. Reproducible, auditable, version-controlled.
@@ -26,39 +28,41 @@ When the Meta incident happened, there was no way to replay the agent's reasonin
 With Tapes, you get:
 
 - **Every LLM call logged.** The full prompt, the full response, token counts, timestamps. Content-addressed with hash chains so the sequence is tamper-evident.
-- **Isolated black box.** The agent's recordings live in `.mb/tapes/tapes.sqlite` — separate from any host-side telemetry. You can hand this file to an auditor, replay it for debugging, or aggregate sessions for self-learning.
-- **Replay any decision.** Walk the hash chain to see: the agent received this email list → it classified this message as a newsletter → it decided to archive. If something goes wrong, you know exactly where and why.
+- **Isolated black box.** The agent's recordings live in `.mb/tapes/tapes.sqlite`, separate from any host-side telemetry. You can hand this file to an auditor, replay it for debugging, or aggregate sessions for self-learning.
+- **Replay any decision.** Walk the hash chain to see: the agent received this email list, it classified this message as a newsletter, it decided to archive. If something goes wrong, you know exactly where and why.
 - **Cost tracking.** Sum `prompt_tokens` and `completion_tokens` across sessions to measure what agent autonomy actually costs.
 
-Over time, these recordings become training data. Analyze 100 triage sessions to find where the skill definition falls short. Which email categories does the agent struggle with? Which prompts produce better classification? The black box isn't just for compliance — it's how agents get better.
+Over time, these recordings become training data. Analyze 100 triage sessions to find where the skill definition falls short. Which email categories does the agent struggle with? Which prompts produce better classification? The black box isn't just for compliance. It's how agents get better.
+
+Tapes also makes iterating on content and updates much easier. When you have recordings of what the agent actually did, writing documentation, blog posts, and changelogs becomes trivial because you have the complete source of truth. You're not reconstructing from memory or guessing at what happened three days ago. You're reading the tape. Every prompt, every response, every decision is right there in the SQLite database, so your technical writing is grounded in exactly what occurred rather than a rough approximation of it.
 
 (See [Agents Need Black Box Recorders](https://papercompute.com/blog/agents-need-black-box-recorders/) for the full argument.)
 
 ## OpenClaw in the Box
 
-**OpenClaw** is the agent framework. It's powerful — Markdown-driven skills, a WebSocket gateway, Claude-powered reasoning. But power without guardrails is how inboxes get deleted.
+**OpenClaw** is the agent framework. It's powerful: Markdown-driven skills, a WebSocket gateway, Claude-powered reasoning. But power without guardrails is how inboxes get deleted.
 
 openclaw-in-a-box is the reference implementation for running OpenClaw responsibly:
 
-- **stereOS** provides the sandbox — network boundaries, ephemeral credentials, auto-teardown
-- **Tapes** provides the flight recorder — every decision logged, replayable, auditable
-- **OpenClaw** provides the agent — skill-driven, extensible, Claude-powered
+- **stereOS** provides the sandbox: network boundaries, ephemeral credentials, auto-teardown
+- **Tapes** provides the flight recorder: every decision logged, replayable, auditable
+- **OpenClaw** provides the agent: skill-driven, extensible, Claude-powered
 
 The result: you know exactly what the agent can reach, exactly what it decided, and the whole thing self-destructs when you're done.
 
 ## The Stack
 
-- **OpenClaw** — agent framework. Loads skills from Markdown, runs a gateway, dispatches to Claude.
-- **stereOS** — ephemeral VM runtime. Network sandboxing, tmpfs secrets, auto-teardown.
-- **Tapes** — telemetry proxy. Every LLM call recorded to SQLite with hash chains.
-- **gog** — CLI bridge for Google Workspace. OAuth, keychain storage, Gmail access.
+- **OpenClaw.** Agent framework. Loads skills from Markdown, runs a gateway, dispatches to Claude.
+- **stereOS.** Ephemeral VM runtime. Network sandboxing, tmpfs secrets, auto-teardown.
+- **Tapes.** Telemetry proxy. Every LLM call recorded to SQLite with hash chains.
+- **gog.** CLI bridge for Google Workspace. OAuth, keychain storage, Gmail access.
 
 ## Prerequisites
 
 Two things before starting:
 
-1. **Master Blaster CLI** (`mb`) — manages the VM lifecycle
-2. **Anthropic API key** — exported as `ANTHROPIC_API_KEY`
+1. **Master Blaster CLI** (`mb`). Manages the VM lifecycle.
+2. **Anthropic API key.** Exported as `ANTHROPIC_API_KEY`.
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
@@ -116,7 +120,7 @@ The install script detects it's running on NixOS (stereOS uses NixOS) and instal
 1. **Node.js 22** via `nix profile install`
 2. **OpenClaw CLI** via `curl -fsSL https://openclaw.ai/install.sh | bash`
 3. **Tapes CLI** via `curl -fsSL https://download.tapes.dev/install | bash` (patched for NixOS dynamic linker)
-4. **gog CLI** — downloaded from GitHub releases, statically linked so no NixOS patching needed
+4. **gog CLI** downloaded from GitHub releases, statically linked so no NixOS patching needed
 
 It also creates writable directories: `output/`, `.tapes/`, `.openclaw/`.
 
@@ -136,14 +140,14 @@ Navigate to the Gmail API library page for your project and click **Enable**.
 
 In Google Auth Platform, click **Get started** and walk through:
 
-1. **App Information** — name: `gmail-triage`, support email: your Gmail
-2. **Audience** — select **External** (required for personal Gmail accounts). The app starts in Testing mode.
-3. **Contact Information** — your email
-4. **Finish** — agree to the User Data Policy
+1. **App Information.** Name: `gmail-triage`, support email: your Gmail.
+2. **Audience.** Select **External** (required for personal Gmail accounts). The app starts in Testing mode.
+3. **Contact Information.** Your email.
+4. **Finish.** Agree to the User Data Policy.
 
 ### Add Yourself as a Test User
 
-Navigate to **Audience** and click **+ Add users**. Add your Gmail address. Without this, the OAuth flow will fail with access denied — the app is in Testing mode and only explicitly added test users can authorize it.
+Navigate to **Audience** and click **+ Add users**. Add your Gmail address. Without this, the OAuth flow will fail with access denied because the app is in Testing mode and only explicitly added test users can authorize it.
 
 ### Create Desktop App Credentials
 
@@ -154,7 +158,7 @@ Navigate to **Clients**, click **+ Create client**:
 
 Click **Create**. A dialog appears with the Client ID and a **Download JSON** button.
 
-**Gotcha we hit:** Google's newer Auth Platform UI no longer lets you view or download client secrets after the initial dialog. If you miss the download, go to the client's detail page, click the info icon, and use **+ Add secret** to create a new one — the new secret has a download icon next to it.
+**Gotcha we hit:** Google's newer Auth Platform UI no longer lets you view or download client secrets after the initial dialog. If you miss the download, go to the client's detail page, click the info icon, and use **+ Add secret** to create a new one. The new secret has a download icon next to it.
 
 ### Register Credentials with gog
 
@@ -196,7 +200,7 @@ gog auth tokens import /workspace/gog-token.json
 rm /workspace/gog-token.json /workspace/gog-creds.json
 ```
 
-The `GOG_KEYRING_PASSWORD` is needed because the VM has no GUI keychain — gog falls back to a file-based keyring encrypted with this password.
+The `GOG_KEYRING_PASSWORD` is needed because the VM has no GUI keychain. gog falls back to a file-based keyring encrypted with this password.
 
 ## Step 4: Start the Agent
 
@@ -206,18 +210,18 @@ bash /workspace/scripts/start.sh
 
 Here's what `start.sh` does in order:
 
-1. **Loads secrets from tmpfs** — reads every file in `/run/stereos/secrets/` and exports them as environment variables
-2. **Copies skills** — copies `skills/gmail-triage/`, `skills/github-org-triage/`, and `skills/discord-bot/` into OpenClaw's skill directory
-3. **Checks integrations** — reports which CLIs and tokens are available:
+1. **Loads secrets from tmpfs.** Reads every file in `/run/stereos/secrets/` and exports them as environment variables.
+2. **Copies skills.** Copies `skills/gmail-triage/`, `skills/github-org-triage/`, and `skills/discord-bot/` into OpenClaw's skill directory.
+3. **Checks integrations.** Reports which CLIs and tokens are available:
    ```
    === Checking integrations ===
      ✓ gog CLI found (Gmail)
      ○ gh CLI not found — GitHub triage skill unavailable
      ○ DISCORD_TOKEN not set — Discord bot skill unavailable
    ```
-4. **Starts Tapes proxy** — background process on port 8080 that intercepts all Anthropic API calls. Writes to `.mb/tapes/tapes.sqlite` — a dedicated black box recorder for the agent, completely separate from any host-side telemetry. This separation is critical: the agent's decision log should never be mixed with the user's coding sessions. (See [Agents Need Black Box Recorders](https://papercompute.com/blog/agents-need-black-box-recorders/))
-5. **Onboards OpenClaw** (first run) — `openclaw onboard --non-interactive --accept-risk --skip-health`
-6. **Starts the gateway** — `openclaw gateway run --verbose`
+4. **Starts Tapes proxy.** Background process on port 8080 that intercepts all Anthropic API calls. Writes to `.mb/tapes/tapes.sqlite`, a dedicated black box recorder for the agent, completely separate from any host-side telemetry. This separation is critical: the agent's decision log should never be mixed with the user's coding sessions. (See [Agents Need Black Box Recorders](https://papercompute.com/blog/agents-need-black-box-recorders/))
+5. **Onboards OpenClaw** (first run). `openclaw onboard --non-interactive --accept-risk --skip-health`
+6. **Starts the gateway.** `openclaw gateway run --verbose`
 
 The gateway discovers all registered skills and makes them available as commands.
 
@@ -267,7 +271,7 @@ Safety constraints baked into the skill: never delete messages, never send repli
 
 The Tapes proxy inside the VM captures every LLM interaction to the agent's dedicated black box: `.mb/tapes/tapes.sqlite`.
 
-This is deliberately separate from the host-side `.tapes/tapes.sqlite` (which records the user's coding sessions with Claude Code). The agent's decision log is its own isolated record — you can hand it to an auditor, replay it for debugging, or analyze it for self-learning without noise from unrelated sessions.
+This is deliberately separate from the host-side `.tapes/tapes.sqlite` (which records the user's coding sessions with Claude Code). The agent's decision log is its own isolated record. You can hand it to an auditor, replay it for debugging, or analyze it for self-learning without noise from unrelated sessions.
 
 Check the proxy log:
 
@@ -281,15 +285,15 @@ cat /workspace/.mb/tapes/start.log | grep "conversation stored"
 {"time":"2026-03-21T09:39:45","level":"INFO","msg":"conversation stored","head":"8575f5d0...","provider":"anthropic"}
 ```
 
-Each entry is a complete conversation turn stored with a content-addressed hash. The hash chain means you can trace the full reasoning sequence — what the agent saw, what it decided, and why.
+Each entry is a complete conversation turn stored with a content-addressed hash. The hash chain means you can trace the full reasoning sequence: what the agent saw, what it decided, and why.
 
 The SQLite database contains a `nodes` table with:
-- `role` — user/assistant
-- `model` — claude-opus-4-6
-- `provider` — anthropic
-- `prompt_tokens` / `completion_tokens` — usage tracking
-- `content` — the full request and response
-- `created_at` — timestamp
+- `role` (user/assistant)
+- `model` (claude-opus-4-6)
+- `provider` (anthropic)
+- `prompt_tokens` / `completion_tokens` (usage tracking)
+- `content` (the full request and response)
+- `created_at` (timestamp)
 
 This is the flight recorder. If the agent miscategorizes an email, you can replay the conversation to see exactly what input it received and what reasoning it produced.
 
@@ -312,11 +316,11 @@ assistant | [{"tool_input":{"command":"gog gmail messages list ..."},...}]
 user      | /gmail-triage
 ```
 
-Read bottom to top: the user invoked `/gmail-triage`, the agent called `gog` to list messages, received the results, then produced the classification. Every step is captured.
+Read bottom to top: the user invoked `/gmail-triage`, the agent called `gog` to list messages, received the results, then produced the classification. Every step is captured. Because the recording is right there in the SQLite database, you can write accurate technical content about what happened: documentation, blog posts, incident reports, all grounded in exactly what the agent saw and decided rather than a reconstruction from memory.
 
 Now imagine the Meta incident with this recording. You'd see exactly where in the conversation the safety constraint was present, exactly when context compaction dropped it, and exactly which LLM response first decided to delete instead of ask. The difference between "200 emails gone, no idea why" and a complete forensic replay.
 
-Over time, these recordings become training data. Analyze 100 triage sessions to find where skill definitions fall short. Which email categories does the agent struggle with? The black box isn't just for incident response — it's how agents get better.
+Over time, these recordings become training data. Analyze 100 triage sessions to find where skill definitions fall short. Which email categories does the agent struggle with? The black box isn't just for incident response. It's how agents get better.
 
 ## Step 7: Teardown
 
@@ -331,11 +335,11 @@ The moment `mb down` runs:
 - The gog refresh token (in the VM's file-based keyring) is gone
 
 What persists on the shared mount:
-- `.openclaw/` — agent config, so next boot skips onboarding
-- `.mb/tapes/tapes.sqlite` — the agent's black box recording
-- `output/` — reports
+- `.openclaw/` for agent config, so next boot skips onboarding
+- `.mb/tapes/tapes.sqlite` for the agent's black box recording
+- `output/` for reports
 
-Next time: `mb up` → `mb ssh` → `bash /workspace/scripts/start.sh` → agent is ready.
+Next time: `mb up` then `mb ssh` then `bash /workspace/scripts/start.sh`, and the agent is ready.
 
 ## Architecture
 
@@ -376,11 +380,11 @@ Next time: `mb up` → `mb ssh` → `bash /workspace/scripts/start.sh` → agent
 
 ## What We Learned Building This
 
-**The orchestrator skill pattern works.** The root `SKILL.md` acts as a setup orchestrator — it detects what's installed, asks the user which integrations they want, and walks through setup. The three integration skills (`gmail-triage`, `github-org-triage`, `discord-bot`) handle the actual work. One VM, multiple skills, user picks what they need.
+**The orchestrator skill pattern works.** The root `SKILL.md` acts as a setup orchestrator. It detects what's installed, asks the user which integrations they want, and walks through setup. The three integration skills (`gmail-triage`, `github-org-triage`, `discord-bot`) handle the actual work. One VM, multiple skills, user picks what they need.
 
-**Don't bypass the VM.** Early in development we made the mistake of running `gog` commands directly via SSH to "test" the triage. This worked functionally but completely bypassed the Tapes proxy — no telemetry, no audit trail, no isolation. The whole value of stereOS is that the agent operates inside the sandbox with everything recorded. If you're running commands directly, you're just using a fancy SSH tunnel.
+**Don't bypass the VM.** Early in development we made the mistake of running `gog` commands directly via SSH to "test" the triage. This worked functionally but completely bypassed the Tapes proxy. No telemetry, no audit trail, no isolation. The whole value of stereOS is that the agent operates inside the sandbox with everything recorded. If you're running commands directly, you're just using a fancy SSH tunnel.
 
-**Secrets need explicit loading in stereOS.** The secrets are injected into `/run/stereos/secrets/` as root-owned files on tmpfs. The SSH session doesn't automatically export them as environment variables. `start.sh` has to `sudo cat` each secret file and export it. This is by design — secrets aren't leaked into the process environment by default.
+**Secrets need explicit loading in stereOS.** The secrets are injected into `/run/stereos/secrets/` as root-owned files on tmpfs. The SSH session doesn't automatically export them as environment variables. `start.sh` has to `sudo cat` each secret file and export it. This is by design. Secrets aren't leaked into the process environment by default.
 
 **OpenClaw skills are security-scoped.** When we tried symlinking skills from the shared mount into OpenClaw's skill directory, it rejected them: "Skipping skill path that resolves outside its configured root." Skills need to be copied, not linked. This prevents a mounted volume from injecting arbitrary skills into the agent.
 
@@ -400,9 +404,9 @@ When we first set this up, both the host-side Tapes proxy (recording the develop
 
 This defeats the purpose of telemetry. An audit trail that mixes operator activity with autonomous agent decisions is useless for:
 
-- **Compliance** — "Show me exactly what the agent did with access to this Gmail account"
-- **Debugging** — "The agent miscategorized an email, replay its reasoning"
-- **Self-learning** — "Analyze 100 triage sessions to find classification patterns the agent gets wrong"
+- **Compliance.** "Show me exactly what the agent did with access to this Gmail account."
+- **Debugging.** "The agent miscategorized an email, replay its reasoning."
+- **Self-learning.** "Analyze 100 triage sessions to find classification patterns the agent gets wrong."
 
 ### The Fix
 
@@ -425,22 +429,22 @@ The `.mb/` directory is the namespace for Master Blaster-managed VM data. The ag
 
 With a clean agent-only recording, you can:
 
-1. **Audit a session** — `sqlite3 .mb/tapes/tapes.sqlite "SELECT role, content FROM nodes ORDER BY created_at"` gives you the full conversation between the agent and Claude, with no noise.
-2. **Measure cost** — sum `prompt_tokens` and `completion_tokens` for just the agent's work, separate from developer usage.
-3. **Replay decisions** — the hash-chained `nodes` table lets you walk the agent's reasoning tree for any triage run.
-4. **Train improvements** — aggregate recordings across sessions to identify where the agent's skill definitions need refinement. Which email categories does it struggle with? What prompts lead to better classification?
-5. **Compare runs** — diff two triage sessions to see if a skill edit improved or degraded performance.
+1. **Audit a session.** `sqlite3 .mb/tapes/tapes.sqlite "SELECT role, content FROM nodes ORDER BY created_at"` gives you the full conversation between the agent and Claude, with no noise.
+2. **Measure cost.** Sum `prompt_tokens` and `completion_tokens` for just the agent's work, separate from developer usage.
+3. **Replay decisions.** The hash-chained `nodes` table lets you walk the agent's reasoning tree for any triage run.
+4. **Train improvements.** Aggregate recordings across sessions to identify where the agent's skill definitions need refinement. Which email categories does it struggle with? What prompts lead to better classification?
+5. **Compare runs.** Diff two triage sessions to see if a skill edit improved or degraded performance.
 
 ### Proposal for Master Blaster
 
-This pattern should be the default in `mb`. When a VM writes telemetry, logs, or session data to the shared mount, it should go under `.mb/` — not mixed into the host project's own tooling directories. `mb` could:
+This pattern should be the default in `mb`. When a VM writes telemetry, logs, or session data to the shared mount, it should go under `.mb/`, not mixed into the host project's own tooling directories. `mb` could:
 
 - Create `.mb/` automatically on first `mb up`
 - Add `.mb/` to `.gitignore` during `mb init`
 - Provide `mb tapes` as a convenience command to query `.mb/tapes/tapes.sqlite`
 - Support `mb tapes export` to extract a session recording for sharing or archival
 
-The flight recorder metaphor is apt. Every commercial aircraft has a black box. Every autonomous agent should too — and it should be the runtime's responsibility to provide it, not something each project has to wire up manually.
+The flight recorder metaphor is apt. Every commercial aircraft has a black box. Every autonomous agent should too, and it should be the runtime's responsibility to provide it, not something each project has to wire up manually.
 
 (See [Agents Need Black Box Recorders](https://papercompute.com/blog/agents-need-black-box-recorders/) for the full argument.)
 
@@ -471,12 +475,12 @@ You are an inbox-cleanup agent.
 5. Write output/INBOX_REPORT.md with a summary.
 ```
 
-That's it. The agent reads this, understands the rules, and executes them using `gog` CLI commands. Change the categories, add new ones, tighten the safety constraints — it's all prose.
+That's it. The agent reads this, understands the rules, and executes them using `gog` CLI commands. Change the categories, add new ones, tighten the safety constraints. It's all prose.
 
 ## References
 
-- [gog CLI](https://github.com/steipete/gogcli) — Google Workspace bridge
-- [OpenClaw](https://openclaw.ai) — agent framework
-- [stereOS](https://stereos.ai) — ephemeral VM platform
-- [Tapes](https://tapes.dev) — agent telemetry
-- [stereOS jcard schema](https://stereos.ai/reference/jcard-schema/) — VM configuration reference
+- [gog CLI](https://github.com/steipete/gogcli). Google Workspace bridge.
+- [OpenClaw](https://openclaw.ai). Agent framework.
+- [stereOS](https://stereos.ai). Ephemeral VM platform.
+- [Tapes](https://tapes.dev). Agent telemetry.
+- [stereOS jcard schema](https://stereos.ai/reference/jcard-schema/). VM configuration reference.
