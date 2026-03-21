@@ -19,6 +19,7 @@ The agent accepts any target — an org, a single repo, or a username:
 
 ```bash
 /github-org-triage papercomputeco                        # whole org
+/github-org-triage papercomputeco openclaw                # multiple orgs
 /github-org-triage papercomputeco/openclaw-in-a-box      # single repo
 /github-org-triage --user bdougie                        # user's repos
 ```

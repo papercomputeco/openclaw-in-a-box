@@ -21,23 +21,31 @@ gh auth status
 
 ## Target
 
-Triage whatever the user provides — an org, a repo, or a username. Examples:
+Triage whatever the user provides — one or more orgs, repos, or usernames. Accepts any combination.
 
 ```bash
 # Scan all repos in an org
 /github-org-triage papercomputeco
 
-# Scan a single repo
+# Multiple orgs
+/github-org-triage papercomputeco openclaw
+
+# Mix orgs and repos
+/github-org-triage papercomputeco openclaw/openclaw-core
+
+# Single repo
 /github-org-triage papercomputeco/openclaw-in-a-box
 
-# Scan a user's repos
+# A user's repos
 /github-org-triage --user bdougie
 ```
 
-Use `gh` commands to resolve the target:
+Use `gh` commands to resolve each target:
 - Org: `gh repo list {org} --json name,url --limit 100`
 - Single repo: `gh api repos/{owner}/{repo}`
 - User: `gh repo list {user} --json name,url --limit 100`
+
+When multiple targets are provided, aggregate results into a single report grouped by org/owner.
 
 If no target is provided, prompt the user.
 
