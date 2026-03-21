@@ -11,10 +11,17 @@ Daily org sheriff in an ephemeral agent. Boot a stereOS VM, let OpenClaw scan yo
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
 export GH_TOKEN="ghp_..."
-export GITHUB_ORG="papercomputeco"
 ```
 
 If you don't have a token yet, create one at [github.com/settings/tokens](https://github.com/settings/tokens?type=beta) with `repo` and `read:org` scopes. For fine-grained tokens, grant read-only access to Issues, Pull requests, and Metadata.
+
+The agent accepts any target — an org, a single repo, or a username:
+
+```bash
+/github-org-triage papercomputeco                        # whole org
+/github-org-triage papercomputeco/openclaw-in-a-box      # single repo
+/github-org-triage --user bdougie                        # user's repos
+```
 
 ## 1. Configure
 

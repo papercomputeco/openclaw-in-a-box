@@ -21,7 +21,25 @@ gh auth status
 
 ## Target
 
-Triage the org specified in the `GITHUB_ORG` environment variable. If not set, prompt the user.
+Triage whatever the user provides — an org, a repo, or a username. Examples:
+
+```bash
+# Scan all repos in an org
+/github-org-triage papercomputeco
+
+# Scan a single repo
+/github-org-triage papercomputeco/openclaw-in-a-box
+
+# Scan a user's repos
+/github-org-triage --user bdougie
+```
+
+Use `gh` commands to resolve the target:
+- Org: `gh repo list {org} --json name,url --limit 100`
+- Single repo: `gh api repos/{owner}/{repo}`
+- User: `gh repo list {user} --json name,url --limit 100`
+
+If no target is provided, prompt the user.
 
 ## Triage Rules
 
