@@ -47,12 +47,12 @@ For Gmail: `gog` auth must be set up on the host first (see `quickstart/gmail/RE
 
 ## What start.sh does
 
-1. Checks which integrations are available (gog, gh, DISCORD_TOKEN)
-2. Starts Tapes proxy in background — captures all LLM traffic to `.tapes/tapes.sqlite`
-3. Runs `openclaw onboard --non-interactive --accept-risk --skip-health` on first run
-4. Runs `openclaw gateway --skills-dir /workspace/skills --verbose` on subsequent runs
-
-The gateway loads all skills from `skills/` and the agent can invoke them.
+1. Loads secrets from stereOS tmpfs (`/run/stereos/secrets/`) — requires passwordless sudo
+2. Copies skills from `/workspace/skills/` into OpenClaw's internal skill directory
+3. Checks which integrations are available (gog, gh, DISCORD_TOKEN)
+4. Starts Tapes proxy in background — captures all LLM traffic to `.mb/tapes/tapes.sqlite`
+5. Runs `openclaw onboard --non-interactive --accept-risk --skip-health` on first run
+6. Runs `openclaw gateway run --verbose`
 
 ## Key paths inside the VM
 

@@ -13,6 +13,8 @@ export OPENCLAW_HOME="${SKILL_DIR}/.openclaw"
 
 # ---------------------------------------------------------------------------
 # Load secrets from stereOS tmpfs (/run/stereos/secrets/)
+# Requires passwordless sudo (default in stereOS VMs).
+# Empty secret files (token not exported on host) are skipped.
 # ---------------------------------------------------------------------------
 SECRETS_DIR="/run/stereos/secrets"
 if [ -d "$SECRETS_DIR" ]; then

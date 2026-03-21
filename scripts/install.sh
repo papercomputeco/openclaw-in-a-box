@@ -7,6 +7,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
 
+GOG_VERSION="0.12.0"
+
 echo "=== OpenClaw Setup ==="
 
 # ---------------------------------------------------------------------------
@@ -45,7 +47,7 @@ echo "Node version: $(node --version)"
 # ---------------------------------------------------------------------------
 # Writable directories (shared mount permissions)
 # ---------------------------------------------------------------------------
-for dir in output .tapes .openclaw; do
+for dir in output .tapes .openclaw .mb/tapes; do
     sudo mkdir -p "$SKILL_DIR/$dir"
     sudo chmod a+rwx "$SKILL_DIR/$dir" 2>/dev/null || true
 done
@@ -91,8 +93,7 @@ if ! command -v gog &>/dev/null; then
     echo ""
     echo "Installing gog CLI..."
     if $IS_NIXOS; then
-        # Download pre-built binary for linux/arm64
-        GOG_VERSION="0.12.0"
+        # Download pre-built binary
         GOG_ARCH="$(uname -m)"
         case "$GOG_ARCH" in
             aarch64) GOG_ARCH="arm64" ;;

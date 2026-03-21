@@ -106,9 +106,9 @@ mb destroy     →  VM removed entirely
 │       │                                                      │
 │       │  shared mount (persists across mb down/up)           │
 │       ▼                                                      │
-│  .openclaw/          agent config + .onboarded marker        │
-│  .tapes/tapes.sqlite telemetry audit trail                   │
-│  output/             agent work products                     │
+│  .openclaw/              agent config + .onboarded marker     │
+│  .mb/tapes/tapes.sqlite  agent black box (VM telemetry)      │
+│  output/                 agent work products                 │
 └──────────────────────────────────────────────────────────────┘
 ```
 
