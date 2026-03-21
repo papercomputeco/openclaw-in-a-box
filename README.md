@@ -2,31 +2,31 @@
 
 Run OpenClaw in a [stereOS](https://stereos.ai) VM with [Tapes](https://tapes.dev) telemetry.
 
-## Prerequisites
+## Get Started
 
-- [Master Blaster](https://github.com/papercomputeco/masterblaster) (`mb` CLI)
-- `ANTHROPIC_API_KEY` exported in your shell:
-  ```bash
-  export ANTHROPIC_API_KEY="sk-ant-..."
-  ```
+Paste this into Claude Code, Cursor, or any coding agent:
 
-## Quickstart
-
-```bash
-# Boot the VM
-mb up
-
-# SSH in
-mb ssh openclaw-in-a-box
-
-# Install openclaw + tapes (first time)
-bash /workspace/scripts/install.sh
-
-# Start the agent
-bash /workspace/scripts/start.sh
+```
+Set up openclaw-in-a-box from https://github.com/papercomputeco/openclaw-in-a-box — clone the repo and follow SKILL.md to get me running with a secure OpenClaw setup.
 ```
 
-On first run, `start.sh` runs `openclaw onboard` (interactive). Subsequent runs start the gateway directly with all skills loaded.
+The agent clones the repo, checks your environment, asks which integrations you want, and walks you through setup.
+
+<details>
+<summary>Manual setup</summary>
+
+Prerequisites: [Master Blaster](https://github.com/papercomputeco/masterblaster) (`mb` CLI) and `ANTHROPIC_API_KEY` exported.
+
+```bash
+git clone https://github.com/papercomputeco/openclaw-in-a-box
+cd openclaw-in-a-box
+export ANTHROPIC_API_KEY="sk-ant-..."
+mb up
+mb ssh openclaw-in-a-box
+bash /workspace/scripts/install.sh   # first time
+bash /workspace/scripts/start.sh
+```
+</details>
 
 ## Integrations
 

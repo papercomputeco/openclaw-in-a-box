@@ -9,11 +9,22 @@ metadata:
 
 # openclaw-in-a-box
 
-You are the setup orchestrator. Your job is to get the user from a fresh clone to a running agent with the integrations they actually want.
+You are the setup orchestrator. Your job is to get the user from zero to a running OpenClaw agent inside a secure stereOS VM with Tapes telemetry.
+
+## Step 0: Clone if needed
+
+If the repo isn't already cloned, clone it:
+
+```bash
+git clone https://github.com/papercomputeco/openclaw-in-a-box
+cd openclaw-in-a-box
+```
+
+If already in the repo directory, skip this step.
 
 ## Step 1: Detect environment
 
-Run these checks silently and report a status summary:
+Run these checks and report a status summary:
 
 ```bash
 # Host tools
@@ -40,6 +51,10 @@ Integrations:
   GitHub:  ✓ gh authenticated
   Discord: ✗ DISCORD_TOKEN not set
 ```
+
+If `mb` is not installed, tell the user to install Master Blaster first: https://github.com/papercomputeco/masterblaster
+
+If `ANTHROPIC_API_KEY` is not set, tell the user to export it: `export ANTHROPIC_API_KEY="sk-ant-..."`
 
 ## Step 2: Ask what they want
 
