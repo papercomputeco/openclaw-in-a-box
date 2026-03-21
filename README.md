@@ -31,6 +31,14 @@ openclaw onboard
 bash /workspace/scripts/start.sh
 ```
 
+## Quickstart Guides
+
+| Guide | Description |
+|-------|-------------|
+| [Gmail Triage](quickstart/gmail/) | Sunday inbox cleanup with an ephemeral Gmail agent |
+
+Each guide includes its own `jcard.toml`, OpenClaw skills, and scripts. See the guide README for setup instructions.
+
 ## Commands
 
 | Command | What it does |
