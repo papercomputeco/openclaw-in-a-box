@@ -41,6 +41,8 @@ bash /workspace/scripts/start.sh
 
 Each guide includes its own `jcard.toml`, OpenClaw skills, and scripts. See the guide README for setup instructions.
 
+Want all three in one VM? Merge the `egress_allow` lists and `[secrets]` blocks into a single `jcard.toml`, drop all skill folders into one `skills/` directory, and export every token before `mb up`. The gateway loads all skills at startup and switches between them based on channel or command. See the [Combining Integrations](SKILL.md#combining-integrations) section for details.
+
 ## Commands
 
 | Command | What it does |

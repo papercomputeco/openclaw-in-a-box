@@ -36,3 +36,30 @@ mb up           # boot + onboard (first time) or start gateway
 mb attach       # interact with the agent
 mb down         # tear down VM (config persists, secrets destroyed)
 ```
+
+## Combining Integrations
+
+Three quickstart integrations are available — Gmail, GitHub, and Discord. Each can run standalone, but they can also be combined into a single VM for a unified agent that triages your inbox, scans your GitHub org, and responds in Discord.
+
+To set up all three:
+
+1. **Merge secrets** — export all required tokens on the host:
+   ```bash
+   export ANTHROPIC_API_KEY="sk-ant-..."
+   export GH_TOKEN="ghp_..."
+   export DISCORD_TOKEN="your-bot-token"
+   ```
+2. **Merge `jcard.toml`** — combine the `egress_allow` lists and `[secrets]` blocks from each quickstart into a single `jcard.toml`.
+3. **Merge skills** — copy all skill directories into a single `skills/` folder:
+   ```
+   skills/
+   ├── gmail-triage/SKILL.md
+   ├── github-org-triage/SKILL.md
+   └── discord-bot/SKILL.md
+   ```
+4. **Update `start.sh`** — validate all tokens and point the gateway at the combined skills directory.
+
+The agent loads all skills at startup and can switch between them based on the channel or command. See each quickstart's README for per-integration setup details:
+- [Gmail Triage](quickstart/gmail/)
+- [GitHub Org Triage](quickstart/github/)
+- [Discord Bot](quickstart/discord/)
