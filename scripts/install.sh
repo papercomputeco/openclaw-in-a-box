@@ -84,6 +84,44 @@ if ! command -v tapes &>/dev/null && [ ! -f /usr/local/bin/tapes ]; then
     fi
 fi
 
+# ---------------------------------------------------------------------------
+# gog CLI (Google Workspace bridge — needed for Gmail triage skill)
+# ---------------------------------------------------------------------------
+if ! command -v gog &>/dev/null; then
+    echo ""
+    echo "Installing gog CLI..."
+    if $IS_NIXOS; then
+        # Download pre-built binary for linux/arm64
+        GOG_VERSION="0.12.0"
+        GOG_ARCH="$(uname -m)"
+        case "$GOG_ARCH" in
+            aarch64) GOG_ARCH="arm64" ;;
+            x86_64)  GOG_ARCH="amd64" ;;
+        esac
+        curl -fsSL "https://github.com/steipete/gogcli/releases/download/v${GOG_VERSION}/gogcli_${GOG_VERSION}_linux_${GOG_ARCH}.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin gog
+        sudo chmod +x /usr/local/bin/gog
+
+        # Patch for NixOS dynamic linker
+        if [ -f /usr/local/bin/gog ]; then
+            INTERP=$(find /nix/store -name "ld-linux-*.so.1" 2>/dev/null | head -1)
+            if [ -n "$INTERP" ]; then
+                command -v patchelf &>/dev/null || nix profile install nixpkgs#patchelf
+                patchelf --set-interpreter "$INTERP" /usr/local/bin/gog
+                echo "Patched gog binary for NixOS"
+            fi
+        fi
+    elif command -v brew &>/dev/null; then
+        brew install steipete/tap/gogcli
+    else
+        echo "WARN: Could not install gog. Install manually for Gmail triage."
+    fi
+fi
+
+if command -v gog &>/dev/null; then
+    echo "gog: $(gog --version 2>/dev/null || echo 'installed')"
+fi
+
 # Initialize Tapes
 if [ ! -f "$SKILL_DIR/.tapes/config.toml" ]; then
     echo "Initializing Tapes..."

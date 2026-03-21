@@ -47,10 +47,10 @@ sleep 2
 
 # Onboard once, then gateway
 if [ ! -f "$OPENCLAW_HOME/.onboarded" ]; then
-    echo "=== First run: run 'openclaw onboard' to configure ==="
-    openclaw onboard
+    echo "=== First run: onboarding openclaw ==="
+    openclaw onboard --non-interactive --accept-risk --skip-health
     touch "$OPENCLAW_HOME/.onboarded"
-else
-    echo "=== Starting openclaw gateway ==="
-    openclaw gateway --skills-dir "$SKILL_DIR/skills" --verbose
 fi
+
+echo "=== Starting openclaw gateway ==="
+openclaw gateway --skills-dir "$SKILL_DIR/skills" --verbose
