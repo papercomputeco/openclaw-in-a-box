@@ -4,7 +4,7 @@ Run OpenClaw in a [stereOS](https://stereos.ai) VM with [Tapes](https://tapes.de
 
 ## Get Started
 
-Paste this into Claude Code, Cursor, or any coding agent:
+Paste this into Claude Code, OpenCode, or any coding harness:
 
 ```
 Set up openclaw-in-a-box from https://github.com/papercomputeco/openclaw-in-a-box — clone the repo and follow SKILL.md to get me running with a secure OpenClaw setup.
