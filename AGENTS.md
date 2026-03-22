@@ -19,10 +19,28 @@ mb up → mb ssh → install.sh → start.sh → OpenClaw gateway → agent uses
 ## Prerequisites
 
 1. **Master Blaster CLI** (`mb`) must be installed and on PATH
-2. **ANTHROPIC_API_KEY** must be exported in the shell
-3. Integration tokens exported for whichever skills you want:
+2. **Model provider** configured (choose one):
+
+   **Anthropic (default):**
    ```bash
    export ANTHROPIC_API_KEY="sk-ant-..."
+   ```
+
+   **Ollama Cloud (no local GPU needed):**
+   ```bash
+   export MODEL_PROVIDER="ollama"
+   export MODEL_NAME="minimax-m2.7:cloud"   # or kimi-k2.5:cloud
+   export OLLAMA_API_KEY="..."
+   ```
+
+   **Ollama Local:**
+   ```bash
+   export MODEL_PROVIDER="ollama"
+   export MODEL_NAME="llama3.3"
+   ```
+
+3. Integration tokens exported for whichever skills you want:
+   ```bash
    export GH_TOKEN="ghp_..."           # for GitHub triage
    export DISCORD_TOKEN="your-token"    # for Discord bot
    ```

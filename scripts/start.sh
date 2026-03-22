@@ -47,6 +47,9 @@ fi
 # Check which integrations are available
 # ---------------------------------------------------------------------------
 echo "=== Checking integrations ==="
+echo "  Provider: ${MODEL_PROVIDER:-anthropic}"
+echo "  Model:    ${MODEL_NAME:-default}"
+echo ""
 
 if command -v gog &>/dev/null; then
     echo "  ✓ gog CLI found (Gmail)"
@@ -71,14 +74,24 @@ fi
 echo ""
 
 # ---------------------------------------------------------------------------
-# Tapes proxy (background) — the agent's black box recorder
-# ---------------------------------------------------------------------------
+# Configure provider (Tapes config + model selection)
 # Writes to .mb/tapes/, not .tapes/. The host's .tapes/ is for the user's
 # coding sessions. The VM's black box is MB-managed data.
 # See: https://papercompute.com/blog/agents-need-black-box-recorders/
+# ---------------------------------------------------------------------------
 VM_TAPES_DIR="$SKILL_DIR/.mb/tapes"
 mkdir -p "$VM_TAPES_DIR"
+bash "$SCRIPT_DIR/configure-provider.sh" "$VM_TAPES_DIR"
 
+# Read back provider info
+source "$VM_TAPES_DIR/provider.env"
+echo "  Provider: $PROVIDER"
+echo "  Model:    $MODEL"
+echo ""
+
+# ---------------------------------------------------------------------------
+# Tapes proxy (background) -- the agent's black box recorder
+# ---------------------------------------------------------------------------
 tapes serve proxy \
     --config-dir "$VM_TAPES_DIR" \
     --sqlite "$VM_TAPES_DIR/tapes.sqlite" &
@@ -91,6 +104,15 @@ if [ ! -f "$OPENCLAW_HOME/.onboarded" ]; then
     echo "=== First run: onboarding openclaw ==="
     openclaw onboard --non-interactive --accept-risk --skip-health
     touch "$OPENCLAW_HOME/.onboarded"
+fi
+
+# ---------------------------------------------------------------------------
+# Set the model provider in OpenClaw
+# ---------------------------------------------------------------------------
+if [ "$PROVIDER" = "ollama" ]; then
+    echo "=== Configuring OpenClaw for Ollama ==="
+    openclaw models set "ollama/$MODEL" 2>/dev/null \
+        || echo "WARN: could not set model ollama/$MODEL — gateway may use default model"
 fi
 
 echo "=== Starting openclaw gateway ==="

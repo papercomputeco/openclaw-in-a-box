@@ -124,11 +124,12 @@ if command -v gog &>/dev/null; then
     echo "gog: $(gog --version 2>/dev/null || echo 'installed')"
 fi
 
-# Initialize Tapes
+# Initialize Tapes with the correct provider preset
+TAPES_PRESET="${MODEL_PROVIDER:-anthropic}"
 if [ ! -f "$SKILL_DIR/.tapes/config.toml" ]; then
-    echo "Initializing Tapes..."
-    cd "$SKILL_DIR" && tapes init --preset anthropic 2>/dev/null \
-        || /usr/local/bin/tapes init --preset anthropic 2>/dev/null \
+    echo "Initializing Tapes (preset: $TAPES_PRESET)..."
+    cd "$SKILL_DIR" && tapes init --preset "$TAPES_PRESET" 2>/dev/null \
+        || /usr/local/bin/tapes init --preset "$TAPES_PRESET" 2>/dev/null \
         || echo "Tapes init skipped (install tapes manually if needed)"
 fi
 

@@ -16,6 +16,8 @@ egress_allow = [
   "api.anthropic.com",
   "openclaw.ai",
   "registry.npmjs.org",
+  # ollama (cloud models)
+  "ollama.com",
   # gmail
   "gmail.googleapis.com",
   "oauth2.googleapis.com",
@@ -42,3 +44,9 @@ readonly = false
 ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
 GH_TOKEN = "${GH_TOKEN}"
 DISCORD_TOKEN = "${DISCORD_TOKEN}"
+# Model provider config (not secrets, but [secrets] is the only
+# env-var injection mechanism in stereOS)
+MODEL_PROVIDER = "${MODEL_PROVIDER}"
+MODEL_NAME = "${MODEL_NAME}"
+OLLAMA_API_KEY = "${OLLAMA_API_KEY}"
+OLLAMA_BASE_URL = "${OLLAMA_BASE_URL}"
