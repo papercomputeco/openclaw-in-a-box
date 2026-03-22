@@ -45,6 +45,16 @@ mb up → mb ssh → install.sh → start.sh → OpenClaw gateway → agent uses
    export DISCORD_TOKEN="your-token"    # for Discord bot
    ```
 
+## Skills
+
+Install the Paper Compute skills (includes tapes, confluent-cloud-setup, dagger-check):
+
+```bash
+npx skills add papercomputeco/skills
+```
+
+This makes the `tapes` skill available for querying past agent sessions from the local SQLite store at `~/.tapes/`.
+
 ## Setup
 
 ```bash
