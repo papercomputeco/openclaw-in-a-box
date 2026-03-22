@@ -41,10 +41,38 @@ The VM comes pre-configured for three integrations. Set up whichever ones you ne
 Each guide walks through the one-time credential setup for that integration. Export the tokens before `mb up`:
 
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
-export GH_TOKEN="ghp_..."           # optional, for GitHub triage
-export DISCORD_TOKEN="your-token"    # optional, for Discord bot
+# Model provider (pick one)
+export ANTHROPIC_API_KEY="sk-ant-..."     # default: Anthropic
+# --- OR ---
+export MODEL_PROVIDER="ollama"
+export MODEL_NAME="minimax-m2.7:cloud"
+export OLLAMA_API_KEY="..."
+
+# Integrations (optional)
+export GH_TOKEN="ghp_..."
+export DISCORD_TOKEN="your-token"
 ```
+
+## Model Providers
+
+By default the agent uses Claude via Anthropic. You can switch to Ollama-hosted models (cloud or local) by setting environment variables before `mb up`.
+
+| Provider | Env Vars | Notes |
+|----------|----------|-------|
+| Anthropic (default) | `ANTHROPIC_API_KEY` | Claude models |
+| Ollama Cloud | `MODEL_PROVIDER=ollama` `MODEL_NAME=minimax-m2.7:cloud` `OLLAMA_API_KEY` | No local GPU needed |
+| Ollama Local | `MODEL_PROVIDER=ollama` `MODEL_NAME=llama3.3` | Requires Ollama + pulled model on host |
+
+### Ollama Cloud example
+
+```bash
+export MODEL_PROVIDER="ollama"
+export MODEL_NAME="kimi-k2.5:cloud"
+export OLLAMA_API_KEY="..."    # from ollama.com/settings
+mb up
+```
+
+Cloud models for agentic work: `minimax-m2.7:cloud`, `kimi-k2.5:cloud`, `minimax-m2.5:cloud`.
 
 ## Commands
 
@@ -93,7 +121,7 @@ mb destroy     →  VM removed entirely
 │  │             │       ▲                                   │  │
 │  │             │       │  intercepts LLM traffic           │  │
 │  │             │       ▼                                   │  │
-│  │             └──► openclaw gateway ◄──► Claude API       │  │
+│  │             └──► openclaw gateway ◄──► LLM API (Anthropic / Ollama)       │  │
 │  │                       │                                 │  │
 │  │                       ├──► gog    ◄──► Gmail API        │  │
 │  │                       ├──► gh     ◄──► GitHub API       │  │
