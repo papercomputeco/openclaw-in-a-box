@@ -121,7 +121,8 @@ mb destroy     →  VM removed entirely
 │  │             │       ▲                                   │  │
 │  │             │       │  intercepts LLM traffic           │  │
 │  │             │       ▼                                   │  │
-│  │             └──► openclaw gateway ◄──► LLM API (Anthropic / Ollama)       │  │
+│  │             └──► openclaw gateway ◄──► LLM API       │  │
+│  │                    (Anthropic or Ollama)               │  │
 │  │                       │                                 │  │
 │  │                       ├──► gog    ◄──► Gmail API        │  │
 │  │                       ├──► gh     ◄──► GitHub API       │  │

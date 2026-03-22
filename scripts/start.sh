@@ -111,7 +111,8 @@ fi
 # ---------------------------------------------------------------------------
 if [ "$PROVIDER" = "ollama" ]; then
     echo "=== Configuring OpenClaw for Ollama ==="
-    openclaw models set "ollama/$MODEL" 2>/dev/null || true
+    openclaw models set "ollama/$MODEL" 2>/dev/null \
+        || echo "WARN: could not set model ollama/$MODEL — gateway may use default model"
 fi
 
 echo "=== Starting openclaw gateway ==="
