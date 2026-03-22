@@ -4,7 +4,7 @@ description: "Orchestrator skill: detects environment, asks user which integrati
 version: 0.2.0
 user-invocable: true
 metadata:
-  { "openclaw": { "emoji": "🦞", "requires": { "bins": [], "env": ["ANTHROPIC_API_KEY"] } } }
+  { "openclaw": { "emoji": "🦞", "requires": { "bins": [], "env": [] } } }
 ---
 
 # openclaw-in-a-box
@@ -31,6 +31,11 @@ Run these checks and report a status summary:
 command -v mb    # Master Blaster CLI
 echo $ANTHROPIC_API_KEY | head -c 10  # API key present (don't print full key)
 
+# Model provider
+echo ${MODEL_PROVIDER:-not set}
+command -v ollama   # Ollama CLI (for local models)
+echo ${OLLAMA_API_KEY:+set}  # Ollama cloud key
+
 # Integration tools
 command -v gog   # Gmail bridge
 gog auth list    # Gmail account connected
@@ -46,6 +51,11 @@ Environment:
   mb CLI:          ✓ installed
   ANTHROPIC_API_KEY: ✓ set
 
+Model Provider:
+  MODEL_PROVIDER:  ○ not set (defaults to anthropic)
+  Ollama CLI:      ○ not found
+  OLLAMA_API_KEY:  ○ not set
+
 Integrations:
   Gmail:   ✗ gog CLI not found
   GitHub:  ✓ gh authenticated
@@ -54,7 +64,49 @@ Integrations:
 
 If `mb` is not installed, tell the user to install Master Blaster first: https://github.com/papercomputeco/masterblaster
 
-If `ANTHROPIC_API_KEY` is not set, tell the user to export it: `export ANTHROPIC_API_KEY="sk-ant-..."`
+If `MODEL_PROVIDER` is not set or is `anthropic`, and `ANTHROPIC_API_KEY` is not set, tell the user to export it: `export ANTHROPIC_API_KEY="sk-ant-..."`
+
+If `MODEL_PROVIDER` is `ollama` and the model ends in `:cloud`, and `OLLAMA_API_KEY` is not set, tell the user to get one at ollama.com/settings.
+
+## Step 1.5: Choose model provider
+
+Ask the user which model provider to use:
+
+- **Anthropic (default)** -- Claude models via Anthropic API. Requires `ANTHROPIC_API_KEY`.
+- **Ollama Cloud** -- Run models like `kimi-k2.5:cloud` or `minimax-m2.7:cloud` via Ollama's hosted API. Requires `OLLAMA_API_KEY` from ollama.com. No local GPU needed.
+- **Ollama Local** -- Run models locally via Ollama on the host machine. The VM connects to the host's Ollama instance. Requires Ollama installed on the host with a model pulled and enough RAM/VRAM.
+
+Based on their choice, tell them which env vars to export:
+
+**Anthropic:**
+```bash
+export MODEL_PROVIDER="anthropic"
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+**Ollama Cloud:**
+```bash
+export MODEL_PROVIDER="ollama"
+export MODEL_NAME="minimax-m2.7:cloud"   # or kimi-k2.5:cloud
+export OLLAMA_API_KEY="..."              # from ollama.com/settings
+```
+
+**Ollama Local:**
+```bash
+export MODEL_PROVIDER="ollama"
+export MODEL_NAME="llama3.3"             # or any pulled model
+export OLLAMA_BASE_URL="http://host.docker.internal:11434"  # if VM can't reach host localhost
+# No API key needed for local
+```
+
+Note for Ollama Local: the VM runs in an isolated network. The default `http://localhost:11434` refers to the VM's own localhost, not the host. If Ollama runs on the host, the user may need to set `OLLAMA_BASE_URL` to the host's IP or a bridge address depending on their stereOS network config.
+
+Popular Ollama cloud models for agentic work:
+| Model | Tag | Notes |
+|-------|-----|-------|
+| MiniMax M2.7 | `minimax-m2.7:cloud` | Built for coding and agentic tasks |
+| Kimi K2.5 | `kimi-k2.5:cloud` | Multimodal, strong agentic capabilities |
+| MiniMax M2.5 | `minimax-m2.5:cloud` | Productivity and coding |
 
 ## Step 2: Ask what they want
 
